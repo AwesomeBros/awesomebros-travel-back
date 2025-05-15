@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.travel.demo.mapper.PostMapper">
+
+    <select id="findLatestPosts" resultType="com.travel.demo.domain.Post">
+        SELECT id, title, content, country, region, view_count AS viewCount, created_at AS createdAt
+        FROM posts
+        ORDER BY created_at DESC
+            LIMIT 8
+    </select>
+
+    <select id="findPopularPosts" resultType="com.travel.demo.domain.Post">
+        SELECT id, title, content, country, region, view_count AS viewCount, created_at AS createdAt
+        FROM posts
+        ORDER BY view_count DESC
+            LIMIT 8
+    </select>
+
+    <select id="findByRegion" parameterType="String" resultType="com.travel.demo.domain.Post">
+        SELECT id, title, content, country, region, view_count AS viewCount, created_at AS createdAt
+        FROM posts
+        WHERE region = #{region}
+        ORDER BY created_at DESC
+    </select>
+
+</mapper>
