@@ -1,4 +1,4 @@
-package com.travel.demo.domain;
+package com.trip_gg.domain;
 
 import lombok.Data;
 
@@ -11,6 +11,7 @@ public class Post {
     private String content;
     private String country;
     private String region;
+    private String imageUrl;
     private int viewCount;
     private LocalDateTime createdAt;
 }
