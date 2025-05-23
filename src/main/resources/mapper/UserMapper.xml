@@ -7,13 +7,13 @@
 
     <!-- 회원가입 -->
     <insert id="insertUser" parameterType="com.trip_gg.domain.User">
-        INSERT INTO users (username, password, email, role, created_at)
+        INSERT INTO users (username, password, email, role, createdAt)
         VALUES (#{username}, #{password}, #{email}, #{role}, #{createdAt})
     </insert>
 
     <!-- 사용자 조회 (로그인용) -->
     <select id="findByUsername" parameterType="String" resultType="com.trip_gg.domain.User">
-        SELECT id, username, password, email, role, created_at
+        SELECT id, username, password, email, role, createdAt
         FROM users
         WHERE username = #{username}
     </select>

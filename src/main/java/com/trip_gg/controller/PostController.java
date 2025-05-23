@@ -37,16 +37,16 @@ public class PostController {
     }
 
     @GetMapping("/posts")
-    public String getPostList(Model model) {
+    public List<Post> getPostList(Model model) {
         List<Post> posts = postService.getAllPosts();
         model.addAttribute("posts", posts);
-        return "postList";
+        return posts;
     }
 
-    @GetMapping("/posts/{id}")
-    public String getPostDetail(@PathVariable Long id, Model model) {
+    @GetMapping("/{id}")
+    public ResponseEntity<PostResponseDto> getPostById(@PathVariable Long id) {
         Post post = postService.getPostById(id);
-        model.addAttribute("post", post);
-        return "postDetail";
+        return ResponseEntity.ok(PostResponseDto.from(post));
     }
+
 }
