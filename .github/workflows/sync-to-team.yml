@@ -1,0 +1,21 @@
+name: Mirror to Team Repository
+
+on:
+  push:
+    branches:
+      - main  # main 브랜치에 push될 때만 작동
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Mirror push to team repo
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add team https://x-access-token:${{ secrets.TEAM_REPO_TOKEN }}@github.com/AwesomeBros/awesomebros-travel-back.git
+          git push --force team main
