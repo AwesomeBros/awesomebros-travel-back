@@ -7,35 +7,41 @@
 
     <!-- 게시물 작성 -->
     <insert id="insertPost" parameterType="com.trip_gg.domain.Post">
-            INSERT INTO posts (title, content, country, region, image_url, view_count, created_at)
-            VALUES (#{title}, #{content}, #{country}, #{region}, #{imageUrl}, #{viewCount}, #{createdAt})
+            INSERT INTO posts (title, content, users_id, cities_id, slug, viewCount, createdAt)
+            VALUES (#{title}, #{content}, #{users_id}, #{cities_id}, #{slug}, #{viewCount}, #{createdAt})
     </insert>
 
+    <!-- 최신 게시글 불러오기 -->
     <select id="findLatestPosts" resultType="com.trip_gg.domain.Post">
-        SELECT id, title, content, country, region, view_count AS viewCount, created_at AS createdAt
+        SELECT id, title, content, users_id, cities_id, slug, viewCount, createdAt
         FROM posts
-        ORDER BY created_at DESC
+        ORDER BY createdAt DESC
             LIMIT 8
     </select>
 
+    <!-- 인기 게시글 불러오기 -->
     <select id="findPopularPosts" resultType="com.trip_gg.domain.Post">
-        SELECT id, title, content, country, region, view_count AS viewCount, created_at AS createdAt
+        SELECT id, title, content, viewCount, createdAt
         FROM posts
-        ORDER BY view_count DESC
+        ORDER BY viewCount DESC
             LIMIT 8
     </select>
 
+    <!-- 지역별 게시글 불러오기 -->
     <select id="findByRegion" parameterType="String" resultType="com.trip_gg.domain.Post">
-        SELECT id, title, content, country, region, view_count AS viewCount, created_at AS createdAt
+        SELECT id, title, content, users_id, cities_id, viewCount, createdAt
         FROM posts
         WHERE region = #{region}
-        ORDER BY created_at DESC
+        ORDER BY createdAt DESC
     </select>
 
+    <!-- 게시글 목록 불러오기 -->
     <select id="getAllPosts" resultType="com.trip_gg.domain.Post">
-        SELECT * FROM posts ORDER BY created_at DESC
+        SELECT * FROM posts
+            ORDER BY createdAt DESC
     </select>
 
+    <!-- 게시글 상세 불러오기 -->
     <select id="getPostById" parameterType="long" resultType="com.trip_gg.domain.Post">
         SELECT * FROM posts WHERE id = #{id}
     </select>

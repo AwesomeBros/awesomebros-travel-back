@@ -13,8 +13,11 @@ public class PostResponseDto {
     private Long id;
     private String title;
     private String content;
-    private String country;
-    private String region;
+    private String users_id;
+    private Long cities_id;
+    private String slug;
+//    private String country;
+//    private String region;
     private String imageUrl;
     private int viewCount;
     private LocalDateTime createdAt;
@@ -24,11 +27,15 @@ public class PostResponseDto {
                 .id(post.getId())
                 .title(post.getTitle())
                 .content(post.getContent())
-                .country(post.getCountry())
-                .region(post.getRegion())
+                .users_id(post.getUsers_id())
+                .cities_id(post.getCities_id())
+                .slug(post.getSlug())
+//                .country(post.getCountry())
+//                .region(post.getRegion())
                 .imageUrl(post.getImageUrl())
                 .viewCount(post.getViewCount())
                 .createdAt(post.getCreatedAt())
                 .build();
     }
+
 }

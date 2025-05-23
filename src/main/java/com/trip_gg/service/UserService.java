@@ -28,6 +28,11 @@ public class UserService {
 
     // 로그인용 유저 조회
     public User findByUsername(String username) {
+
+//        System.out.println("ID 요청 : " + username);
+//        User user = userMapper.findByUsername(username);
+//        System.out.println("ID 응답 : " + username);
+//        return user;
         return userMapper.findByUsername(username);
     }
 
