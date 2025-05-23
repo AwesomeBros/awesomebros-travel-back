@@ -1,6 +1,6 @@
-package com.travel.demo.dto;
+package com.trip_gg.dto;
 
-import com.travel.demo.domain.Post;
+import com.trip_gg.domain.Post;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -15,6 +15,7 @@ public class PostResponseDto {
     private String content;
     private String country;
     private String region;
+    private String imageUrl;
     private int viewCount;
     private LocalDateTime createdAt;
 
@@ -25,6 +26,7 @@ public class PostResponseDto {
                 .content(post.getContent())
                 .country(post.getCountry())
                 .region(post.getRegion())
+                .imageUrl(post.getImageUrl())
                 .viewCount(post.getViewCount())
                 .createdAt(post.getCreatedAt())
                 .build();
