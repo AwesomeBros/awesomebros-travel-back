@@ -6,9 +6,35 @@
 <mapper namespace="com.trip_gg.mapper.PostMapper">
 
     <!-- 게시물 작성 -->
+<!--    <insert id="insertPost" parameterType="com.trip_gg.domain.Post">-->
+<!--            INSERT INTO posts (title, content, users_id, cities_id, slug, viewCount, createdAt)-->
+<!--            VALUES (#{title}, #{content}, #{users_id}, #{cities_id}, #{slug}, #{viewCount}, #{createdAt})-->
+<!--    </insert>-->
     <insert id="insertPost" parameterType="com.trip_gg.domain.Post">
-            INSERT INTO posts (title, content, users_id, cities_id, slug, viewCount, createdAt)
-            VALUES (#{title}, #{content}, #{users_id}, #{cities_id}, #{slug}, #{viewCount}, #{createdAt})
+            INSERT INTO posts (
+                users_id,
+                countries_id,
+                cities_id,
+                districts_id,
+                title,
+                content,
+                slug,
+                viewCount,
+                createdAt,
+                url
+            )
+            VALUES (
+               #{users_id},
+               #{countries_id},
+               #{cities_id},
+               #{districts_id},
+               #{title},
+               #{content},
+               #{slug},
+               #{viewCount},
+               #{createdAt},
+               #{url}
+            )
     </insert>
 
     <!-- 최신 게시글 불러오기 -->
