@@ -35,5 +35,4 @@ public class PostResponseDto {
                 .createdAt(post.getCreatedAt())
                 .build();
     }
-
 }
