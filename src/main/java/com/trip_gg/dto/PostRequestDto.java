@@ -20,10 +20,8 @@ public class PostRequestDto {
         post.setTitle(this.title);
         post.setContent(this.content);
         post.setUsers_id(this.users_id);
-        post.setCities_id(this.cities_id);
+        post.setCities_id(String.valueOf(this.cities_id));
         post.setSlug(this.slug);
-//        post.setCountry(this.country);
-//        post.setRegion(this.region);
         post.setImageUrl(this.imageUrl);
         post.setViewCount(this.viewCount);
         return post;

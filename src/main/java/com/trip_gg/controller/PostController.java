@@ -18,31 +18,36 @@ public class PostController {
 
     private final PostService postService;
 
+    /* 생성 파트 */
+    // 글 작성
     @PostMapping
     public ResponseEntity<String> createPost(@RequestBody PostRequestDto postRequestDto) {
         postService.createPost(postRequestDto);
         return ResponseEntity.ok("글 작성 완료");
     }
 
-    // 최신 / 인기글 목록
+    /* 조회 파트 */
+    // 최신순 또는 인기순 게시글 목록 조회 (쿼리 파라미터: ?sort=latest | popular)
     @GetMapping
     public List<PostResponseDto> getPostsSorted(@RequestParam(defaultValue = "latest") String sort) {
         return postService.getSortedPosts(sort);
     }
 
-    // 지역별 목록
-    @GetMapping("/region")
-    public List<PostResponseDto> getPostsByRegion(@RequestParam String region) {
-        return postService.getPostsByRegion(region);
+    // 지역 기준 게시글 목록 조회 (쿼리 파라미터: ?region=서울 등)
+    @GetMapping("/cities")
+    public List<PostResponseDto> getPostsByCity(@RequestParam String cities_id) {
+        return postService.getPostsByCity(cities_id);
     }
 
-    @GetMapping("/posts")
+    // 전체 게시글 목록 조회
+    @GetMapping("/all")
     public List<Post> getPostList(Model model) {
         List<Post> posts = postService.getAllPosts();
         model.addAttribute("posts", posts);
         return posts;
     }
 
+    // 단일 게시글 상세 조회
     @GetMapping("/{id}")
     public ResponseEntity<PostResponseDto> getPostById(@PathVariable Long id) {
         Post post = postService.getPostById(id);

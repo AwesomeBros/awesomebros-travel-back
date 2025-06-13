@@ -14,7 +14,7 @@ public class PostResponseDto {
     private String title;
     private String content;
     private String users_id;
-    private Long cities_id;
+    private String cities_id;
     private String slug;
 //    private String country;
 //    private String region;
@@ -30,8 +30,6 @@ public class PostResponseDto {
                 .users_id(post.getUsers_id())
                 .cities_id(post.getCities_id())
                 .slug(post.getSlug())
-//                .country(post.getCountry())
-//                .region(post.getRegion())
                 .imageUrl(post.getImageUrl())
                 .viewCount(post.getViewCount())
                 .createdAt(post.getCreatedAt())

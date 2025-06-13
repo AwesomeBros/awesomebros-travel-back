@@ -10,10 +10,8 @@ public class Post {
     private String title;
     private String content;
     private String users_id;
-    private Long cities_id;
+    private String cities_id;
     private String slug;
-//    private String country;
-//    private String region;
     private String imageUrl;
     private int viewCount;
     private LocalDateTime createdAt;

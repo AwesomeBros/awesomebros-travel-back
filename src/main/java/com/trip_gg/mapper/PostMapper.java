@@ -10,7 +10,7 @@ public interface PostMapper {
     void insertPost(Post post);
     List<Post> findLatestPosts();
     List<Post> findPopularPosts();
-    List<Post> findByRegion(String region);
+    List<Post> getPostsByCity(String cities_id);
     List<Post> getAllPosts();
     Post getPostById(Long id);
 }

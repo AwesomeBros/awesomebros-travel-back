@@ -28,10 +28,10 @@
     </select>
 
     <!-- 지역별 게시글 불러오기 -->
-    <select id="findByRegion" parameterType="String" resultType="com.trip_gg.domain.Post">
+    <select id="getPostsByCity" parameterType="String" resultType="com.trip_gg.domain.Post">
         SELECT id, title, content, users_id, cities_id, viewCount, createdAt
         FROM posts
-        WHERE region = #{region}
+        WHERE cities_id = #{cities_id}
         ORDER BY createdAt DESC
     </select>
 

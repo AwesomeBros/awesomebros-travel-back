@@ -38,8 +38,8 @@ public class PostService {
     }
 
     // 게시글 지역별 불러오기
-    public List<PostResponseDto> getPostsByRegion(String region) {
-        return postMapper.findByRegion(region).stream()
+    public List<PostResponseDto> getPostsByCity(String cities_id) {
+        return postMapper.getPostsByCity(cities_id).stream()
                 .map(PostResponseDto::from)
                 .collect(Collectors.toList());
     }
