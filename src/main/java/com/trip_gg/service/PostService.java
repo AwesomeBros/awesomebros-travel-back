@@ -16,13 +16,23 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PostService {
 
-    @Autowired
     private final PostMapper postMapper;
 
     // 게시글 작성
-    public void createPost(PostRequestDto requestDto) {
+    public void createPost(PostRequestDto requestDto) throws IllegalAccessException {
         Post post = requestDto.toPost();
         post.setCreatedAt(LocalDateTime.now());
+
+        int isValid = postMapper.checkLocationValidity(
+                post.getCountries_id(),
+                post.getCities_id(),
+                post.getDistricts_id()
+        );
+
+        if (isValid == 0) {
+            throw new IllegalAccessException("국가, 도시, 지역 선택이 잘못되었습니다.");
+        }
+
         postMapper.insertPost(post);
     }
 

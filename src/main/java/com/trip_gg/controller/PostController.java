@@ -21,7 +21,7 @@ public class PostController {
     /* 생성 파트 */
     // 글 작성
     @PostMapping
-    public ResponseEntity<String> createPost(@RequestBody PostRequestDto postRequestDto) {
+    public ResponseEntity<String> createPost(@RequestBody PostRequestDto postRequestDto) throws IllegalAccessException {
         postService.createPost(postRequestDto);
         return ResponseEntity.ok("글 작성 완료");
     }
