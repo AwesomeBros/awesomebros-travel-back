@@ -20,8 +20,8 @@ public class DistrictController {
     private final DistrictService districtService;
 
     @GetMapping
-    public ResponseEntity<List<DistrictResponseDto>> getAllDistricts(@RequestParam("cityId") int cityId){
-        List<DistrictResponseDto> districts = districtService.getAllDistricts(cityId);
+    public ResponseEntity<List<DistrictResponseDto>> getAllDistricts(@RequestParam("cities_id") int cities_id){
+        List<DistrictResponseDto> districts = districtService.getAllDistricts(cities_id);
         return ResponseEntity.ok(districts);
     }
 }

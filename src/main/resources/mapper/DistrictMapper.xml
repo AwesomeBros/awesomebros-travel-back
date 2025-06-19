@@ -11,7 +11,7 @@
         SELECT d.id, d.name
         FROM districts d
                  JOIN cities c ON d.cities_id = c.id
-        WHERE c.id = #{cityId}
+        WHERE c.id = #{cities_id}
         ORDER BY d.id DESC
     </select>
 

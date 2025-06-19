@@ -14,8 +14,8 @@ public class DistrictService {
 
     private final DistrictMapper districtMapper;
 
-    public List<DistrictResponseDto> getAllDistricts(int cityId){
-        List<DistrictResponseDto> districts = districtMapper.findAllByCity(cityId);
+    public List<DistrictResponseDto> getAllDistricts(int cities_id){
+        List<DistrictResponseDto> districts = districtMapper.findAllByCity(cities_id);
         return districts;
     }
 }

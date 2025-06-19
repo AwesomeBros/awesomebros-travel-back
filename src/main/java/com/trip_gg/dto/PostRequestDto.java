@@ -30,7 +30,7 @@ public class PostRequestDto {
 //    private int post_id;
 //    private LocalDateTime created_at;
 
-    private List<LocationDto> coordinates;
+    private List<LocationDto> locations;
 
     // Post 엔티티로 변환
     public Post toPost() {
@@ -55,7 +55,7 @@ public class PostRequestDto {
 
     // Location 엔티티로 변환
     public List<Location> toLocation(int post_id) {
-        return this.coordinates.stream()
+        return this.locations.stream()
                 .map(coord -> Location.builder()
                         .name(coord.getName())
                         .lat(coord.getLat())

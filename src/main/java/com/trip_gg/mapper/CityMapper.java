@@ -8,5 +8,5 @@ import java.util.List;
 
 @Mapper
 public interface CityMapper {
-    List<CityResponseDto> findAllByCountry(int countryId);
+    List<CityResponseDto> findAllByCountry(int countries_id);
 }

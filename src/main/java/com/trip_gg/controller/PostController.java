@@ -5,6 +5,7 @@ import com.trip_gg.dto.PostRequestDto;
 import com.trip_gg.dto.PostResponseDto;
 import com.trip_gg.service.PostService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -27,10 +28,14 @@ public class PostController {
         return ResponseEntity.ok("글 작성 완료");
     }
 
+  /*  // 글 작성
+    @PostMapping(value = "/posts", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)*/
+
     /* 조회 파트 */
     // 최신순 또는 인기순 게시글 목록 조회 (쿼리 파라미터: ?sort=latest | popular)
     @GetMapping
     public List<PostResponseDto> getPostsSorted(@RequestParam("sort") String sort) {
+
         return postService.getSortedPosts(sort);
     }
 
