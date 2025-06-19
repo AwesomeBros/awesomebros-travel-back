@@ -27,9 +27,12 @@ public class SecurityConfig {
                                 "/api/users/**",
                                 "/api/posts/**",
                                 "/api/posts/cities",
-                                "/api/posts/cities/**"
+                                "/api/posts/cities/**",
+                                "/api/auth/**", // ✅ NextAuth 로그인 관련 인증 API 허용
+                                "/api/countries/**",
+                                "/api/cities/**",
+                                "/api/districts/**"
                         ).permitAll()
-                        // 허용
                         .anyRequest().authenticated() // 나머지는 인증 필요
                 );
 

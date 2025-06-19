@@ -7,15 +7,23 @@
 
     <!-- 회원가입 -->
     <insert id="insertUser" parameterType="com.trip_gg.domain.User">
-        INSERT INTO users (username, password, email, role, createdAt)
-        VALUES (#{username}, #{password}, #{email}, #{role}, #{createdAt})
+        INSERT INTO users (username, password, email, nickname, created_at)
+        VALUES (#{username}, #{password}, #{email}, #{nickname}, #{created_at})
     </insert>
 
     <!-- 사용자 조회 (로그인용) -->
     <select id="findByUsername" parameterType="String" resultType="com.trip_gg.domain.User">
-        SELECT id, username, password, email, role, createdAt
+        SELECT id, username, password, email, role, created_at
         FROM users
         WHERE username = #{username}
+    </select>
+
+    <select id="existsByUsername" resultType="boolean" parameterType="string">
+        SELECT COUNT(*) > 0 FROM users WHERE username = #{username}
+    </select>
+
+    <select id="existsByEmail" resultType="boolean" parameterType="string">
+        SELECT COUNT(*) > 0 FROM users WHERE email = #{email}
     </select>
 
 </mapper>

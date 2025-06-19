@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.time.Instant;
 import java.util.Date;
 
 @Component
@@ -81,5 +82,11 @@ public class JwtTokenProvider {
 
     public String getUsername(String token) {
         return getUserIdFromToken(token);
+    }
+
+    public long getAccessTokenExpiry() {
+        long currentEpochMillis = Instant.now().toEpochMilli();
+        long expiryEpochMillis = currentEpochMillis + accessTokenValidTime;
+        return expiryEpochMillis;
     }
 }

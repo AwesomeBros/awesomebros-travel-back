@@ -42,4 +42,12 @@ public class UserService {
     public boolean checkLogin(String originPassword, String encodedPassword) {
         return passwordEncoder.matches(originPassword, encodedPassword);
     }
+
+    public boolean existsByUsername(String username) {
+        return userMapper.existsByUsername(username);
+    }
+
+    public boolean existsByEmail(String email) {
+        return userMapper.existsByEmail(email);
+    }
 }
