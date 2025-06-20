@@ -16,6 +16,9 @@ public class User {
     private String username;
     private String password;
     private String email;
+    private String nickname;
     private String role;
-    private LocalDateTime createdAt;
+    private String provider;
+    private String profileUrl;
+    private LocalDateTime created_at;
 }

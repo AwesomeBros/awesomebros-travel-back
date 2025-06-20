@@ -1,6 +1,7 @@
 package com.trip_gg.service;
 
 import com.trip_gg.domain.User;
+import com.trip_gg.dto.UserRequestDto;
 import com.trip_gg.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,16 +15,17 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     // 회원가입
-    public void register(User user) {
+    public void register(UserRequestDto dto) {
         // 비밀번호 암호화
-        String encodedPassword = passwordEncoder.encode(user.getPassword());
-        user.setPassword(encodedPassword);
-
-        // createdAt 시간 세팅
-        user.setCreatedAt(LocalDateTime.now());
-
-        // 저장
+        String encodedPassword = passwordEncoder.encode(dto.getPassword());
+        User user = dto.toUser(encodedPassword);
         userMapper.insertUser(user);
+
+//        // 가입 시간 저장
+//        user.setCreatedAt(LocalDateTime.now());
+//
+//        // DB 저장
+//        userMapper.insertUser(user);
     }
 
     // 로그인용 유저 조회
@@ -39,5 +41,13 @@ public class UserService {
     // 로그인 검증 메서드
     public boolean checkLogin(String originPassword, String encodedPassword) {
         return passwordEncoder.matches(originPassword, encodedPassword);
+    }
+
+    public boolean existsByUsername(String username) {
+        return userMapper.existsByUsername(username);
+    }
+
+    public boolean existsByEmail(String email) {
+        return userMapper.existsByEmail(email);
     }
 }

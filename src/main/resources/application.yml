@@ -1,3 +1,6 @@
+jwt:
+  secret: mySuperSecretJwtKey1234567890!@#
+
 spring:
   datasource:
     url: ${DB_URL}?allowPublicKeyRetrieval=true&useSSL=false

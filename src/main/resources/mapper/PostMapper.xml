@@ -6,39 +6,66 @@
 <mapper namespace="com.trip_gg.mapper.PostMapper">
 
     <!-- 게시물 작성 -->
-    <insert id="insertPost" parameterType="com.trip_gg.domain.Post">
-            INSERT INTO posts (title, content, users_id, cities_id, slug, viewCount, createdAt)
-            VALUES (#{title}, #{content}, #{users_id}, #{cities_id}, #{slug}, #{viewCount}, #{createdAt})
+<!--    <insert id="insertPost" parameterType="com.trip_gg.domain.Post">-->
+<!--            INSERT INTO posts (title, content, users_id, cities_id, slug, viewCount, createdAt)-->
+<!--            VALUES (#{title}, #{content}, #{users_id}, #{cities_id}, #{slug}, #{viewCount}, #{createdAt})-->
+<!--    </insert>-->
+    <insert id="insertPost" parameterType="com.trip_gg.dto.PostRequestDto" useGeneratedKeys="true" keyProperty="id">
+            INSERT INTO posts (
+                users_id,
+                countries_id,
+                cities_id,
+                districts_id,
+                title,
+                content,
+                slug,
+                url,
+                viewCount,
+                created_at
+            )
+            VALUES (
+               #{users_id},
+               #{countries_id},
+               #{cities_id},
+               #{districts_id},
+               #{title},
+               #{content},
+               #{slug},
+               #{url},
+               #{viewCount},
+               #{created_at}
+            )
     </insert>
 
     <!-- 최신 게시글 불러오기 -->
     <select id="findLatestPosts" resultType="com.trip_gg.domain.Post">
-        SELECT id, title, content, users_id, cities_id, slug, viewCount, createdAt
+        SELECT id, title, content, users_id, cities_id, slug, viewCount, created_at
         FROM posts
-        ORDER BY createdAt DESC
+        ORDER BY created_at DESC
             LIMIT 8
     </select>
 
     <!-- 인기 게시글 불러오기 -->
     <select id="findPopularPosts" resultType="com.trip_gg.domain.Post">
-        SELECT id, title, content, viewCount, createdAt
+        SELECT id, title, content, viewCount, created_at
         FROM posts
         ORDER BY viewCount DESC
             LIMIT 8
     </select>
 
     <!-- 지역별 게시글 불러오기 -->
-    <select id="findByRegion" parameterType="String" resultType="com.trip_gg.domain.Post">
-        SELECT id, title, content, users_id, cities_id, viewCount, createdAt
-        FROM posts
-        WHERE region = #{region}
-        ORDER BY createdAt DESC
+    <select id="getPostsByCity" parameterType="String" resultType="com.trip_gg.domain.Post">
+        SELECT p.id, p.title, p.content, p.users_id, p.cities_id, p.viewCount, p.created_at
+        FROM posts p
+        JOIN cities c ON p.cities_id = c.id
+        WHERE c.name = #{city}
+        ORDER BY p.created_at DESC
     </select>
 
     <!-- 게시글 목록 불러오기 -->
     <select id="getAllPosts" resultType="com.trip_gg.domain.Post">
         SELECT * FROM posts
-            ORDER BY createdAt DESC
+            ORDER BY created_at DESC
     </select>
 
     <!-- 게시글 상세 불러오기 -->

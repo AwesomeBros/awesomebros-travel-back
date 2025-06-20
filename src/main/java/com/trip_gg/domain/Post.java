@@ -6,15 +6,18 @@ import java.time.LocalDateTime;
 
 @Data
 public class Post {
-    private Long id;
+    private int id;
     private String title;
     private String content;
     private String users_id;
-    private Long cities_id;
     private String slug;
-//    private String country;
-//    private String region;
-    private String imageUrl;
+    private String url;
     private int viewCount;
-    private LocalDateTime createdAt;
+
+    private Long countries_id;
+    private Long cities_id;
+    private Long districts_id;
+    private int post_id;
+
+    private LocalDateTime created_at;
 }

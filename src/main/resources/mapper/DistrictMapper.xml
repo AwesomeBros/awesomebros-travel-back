@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.trip_gg.mapper.DistrictMapper">
+
+
+    <!-- 최신 게시글 불러오기 -->
+    <select id="findAllByCity" resultType="com.trip_gg.domain.District">
+        SELECT d.id, d.name
+        FROM districts d
+                 JOIN cities c ON d.cities_id = c.id
+        WHERE c.id = #{cities_id}
+        ORDER BY d.id DESC
+    </select>
+
+</mapper>

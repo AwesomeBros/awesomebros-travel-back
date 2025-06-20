@@ -23,7 +23,16 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // CSRF 비활성화
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS 설정 적용
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/**", "/api/posts/**").permitAll() // 허용
+                        .requestMatchers(
+                                "/api/users/**",
+                                "/api/posts/**",
+                                "/api/posts/cities",
+                                "/api/posts/cities/**",
+                                "/api/auth/**", // ✅ NextAuth 로그인 관련 인증 API 허용
+                                "/api/countries/**",
+                                "/api/cities/**",
+                                "/api/districts/**"
+                        ).permitAll()
                         .anyRequest().authenticated() // 나머지는 인증 필요
                 );
 
