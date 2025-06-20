@@ -55,9 +55,9 @@ public class PostController {
 
     // 단일 게시글 상세 조회
     @GetMapping("/{id}")
-    public ResponseEntity<PostResponseDto> getPostById(@PathVariable Long id) {
-        Post post = postService.getPostById(id);
-        return ResponseEntity.ok(PostResponseDto.from(post));
+    public ResponseEntity<PostResponseDto> getPostById(@PathVariable int id) {
+        PostResponseDto post = postService.getPostById(id);
+        return ResponseEntity.ok(post);
     }
 
 }

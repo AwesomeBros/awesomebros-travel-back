@@ -26,7 +26,7 @@ public class PostResponseDto {
     private Long cities_id;
     private Long districts_id;
 
-    private List<LocationDto> coordinates;
+    private List<LocationDto> locations;
 
     // 기본 변환(좌표 없이)
     public static PostResponseDto from(Post post) {
@@ -46,7 +46,7 @@ public class PostResponseDto {
     }
 
     // 좌표 리스트 포함된 변환
-    public static PostResponseDto from(Post post, List<LocationDto> coordinates) {
+    public static PostResponseDto from(Post post, List<LocationDto> locations) {
         return PostResponseDto.builder()
                 .id(post.getId())
                 .title(post.getTitle())
@@ -59,7 +59,7 @@ public class PostResponseDto {
                 .url(post.getUrl())
                 .viewCount(post.getViewCount())
                 .created_at(post.getCreated_at())
-                .coordinates(coordinates)
+                .locations(locations)
                 .build();
     }
 }

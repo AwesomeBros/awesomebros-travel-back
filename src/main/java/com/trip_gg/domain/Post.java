@@ -19,5 +19,9 @@ public class Post {
     private Long districts_id;
     private int post_id;
 
+    private String name;
+    private double lat;
+    private double lng;
+
     private LocalDateTime created_at;
 }

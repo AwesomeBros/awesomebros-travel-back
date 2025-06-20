@@ -69,7 +69,7 @@
     </select>
 
     <!-- 게시글 상세 불러오기 -->
-    <select id="getPostById" parameterType="long" resultType="com.trip_gg.domain.Post">
+    <select id="getPostById" parameterType="int" resultType="com.trip_gg.domain.Post">
         SELECT * FROM posts WHERE id = #{id}
     </select>
 

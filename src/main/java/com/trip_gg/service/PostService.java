@@ -81,7 +81,14 @@ public class PostService {
     }
 
     // 게시글 상세보기
-    public Post getPostById(Long id) {
-        return postMapper.getPostById(id);
+    public PostResponseDto getPostById(int id) {
+        Post post = postMapper.getPostById(id);
+
+        List<Location> locationList = locationMapper.getLocationByPostId(id); // ← 기존 코드 없음
+        List<LocationDto> locationDtos = locationList.stream()
+                .map(LocationDto::from)
+                .collect(Collectors.toList());
+
+        return PostResponseDto.from(post, locationDtos);
     }
 }
