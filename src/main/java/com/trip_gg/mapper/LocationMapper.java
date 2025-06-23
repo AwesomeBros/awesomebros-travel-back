@@ -10,4 +10,6 @@ public interface LocationMapper {
     void insertLocation(Location location);
 
     List<Location> findAll();
+
+    List<Location> getLocationByPostId(int post_id);
 }

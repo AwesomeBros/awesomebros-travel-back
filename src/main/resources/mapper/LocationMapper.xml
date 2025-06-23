@@ -10,7 +10,7 @@
         VALUES (#{name}, #{lat}, #{lng}, #{post_id}, #{created_at})
     </insert>
 
-    <select id="findByPostId" parameterType="long" resultType="com.trip_gg.domain.Location">
+    <select id="getLocationByPostId" parameterType="int" resultType="com.trip_gg.domain.Location">
         SELECT id, name, lat, lng, created_at, post_id
         FROM locations
         WHERE post_id = #{postId}

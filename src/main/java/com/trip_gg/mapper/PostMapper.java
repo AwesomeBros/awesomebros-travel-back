@@ -14,7 +14,7 @@ public interface PostMapper {
     List<Post> findPopularPosts();
     List<Post> getPostsByCity(String city);
     List<Post> getAllPosts();
-    Post getPostById(Long id);
+    Post getPostById(int id);
 
     // 위치 논리 일관성 검증용 메서드
    /* @Select("""
