@@ -60,11 +60,11 @@ public class UserController {
             System.out.println("Provider: " + storedUser.getProvider());
 
             // AccessToken, RefreshToken 각각 발급
-            String accessToken = jwtTokenProvider.generateToken(storedUser.getUsername());
-            String refreshToken = jwtTokenProvider.generateRefreshToken(storedUser.getUsername());
+            String accessToken = jwtTokenProvider.generateToken(storedUser.getId());
+            String refreshToken = jwtTokenProvider.generateRefreshToken(storedUser.getId());
 
             // RefreshToken 저장
-            refreshTokenService.save(storedUser.getUsername(), refreshToken);
+            refreshTokenService.save(storedUser.getId(), refreshToken);
 
             // Map으로 사용자 정보 구성 (null-safe)
             Map<String, Object> user = new HashMap<>();
