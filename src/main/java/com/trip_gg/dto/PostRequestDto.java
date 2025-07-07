@@ -5,6 +5,7 @@ import com.trip_gg.domain.Post;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,7 +16,6 @@ public class PostRequestDto {
     private String content;
     private String users_id;
     private String slug;
-    private String url;
     private int viewCount;
 
     // 지역 카테고리
@@ -23,14 +23,19 @@ public class PostRequestDto {
     private Long cities_id;
     private Long districts_id;
 
-    // Location 정보
-//    private String name;
-//    private double lat;
-//    private double lng;
-//    private int post_id;
-//    private LocalDateTime created_at;
-
     private List<LocationDto> locations;
+
+    private String url;
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public void setUsers_id(String users_id) { this.users_id = users_id;}
 
     // Post 엔티티로 변환
     public Post toPost() {

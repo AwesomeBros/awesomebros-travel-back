@@ -3,13 +3,16 @@ package com.trip_gg.controller;
 import com.trip_gg.domain.Post;
 import com.trip_gg.dto.PostRequestDto;
 import com.trip_gg.dto.PostResponseDto;
+import com.trip_gg.jwt.JwtTokenProvider;
 import com.trip_gg.service.PostService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -18,18 +21,28 @@ import java.util.List;
 public class PostController {
 
     private final PostService postService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     /* 생성 파트 */
-    // 글 작성
-    @PostMapping
-    public ResponseEntity<String> createPost(@RequestBody PostRequestDto postRequestDto) throws IllegalAccessException {
-        postService.createPost(postRequestDto);
-        System.out.println("받은 데이터는 : " + postRequestDto);
-        return ResponseEntity.ok("글 작성 완료");
+    // 글 작성 - JSON만 처리
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> createPost(@RequestBody PostRequestDto postRequestDto,
+                                             HttpServletRequest request){
+        try{
+            String token = jwtTokenProvider.resolveToken(request);
+            String users_id = jwtTokenProvider.getUserIdFromToken(token);
+            postRequestDto.setUsers_id(users_id);
+
+            postService.createPost(postRequestDto);
+            return ResponseEntity.ok("글 작성 완료");
+        } catch (IllegalAccessException exception) {
+            exception.printStackTrace();
+            return ResponseEntity.internalServerError().body("업로드 중 오류 발생: " + exception.getMessage());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-  /*  // 글 작성
-    @PostMapping(value = "/posts", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)*/
 
     /* 조회 파트 */
     // 최신순 또는 인기순 게시글 목록 조회 (쿼리 파라미터: ?sort=latest | popular)
@@ -59,5 +72,4 @@ public class PostController {
         PostResponseDto post = postService.getPostById(id);
         return ResponseEntity.ok(post);
     }
-
 }

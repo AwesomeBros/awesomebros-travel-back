@@ -17,6 +17,7 @@ public class PostResponseDto {
     private String users_id;
 
     private String slug;
+//    private String fileUrl;
     private String url;
     private int viewCount;
     private LocalDateTime created_at;

@@ -11,13 +11,35 @@ spring:
   redis:
     host: ${DB_IP}
     port: 6379
-    #password: 원하면 설정기기
 
   jackson:
     time-zone: Asia/Seoul
+
+  web:
+    resources:
+      static-locations: classpath:/static/, file:uploads/
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 mybatis:
   mapper-locations: classpath:/mapper/**/*.xml
   type-aliases-package: com.trip_gg.domain
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+
+# 파일 업로드 디렉토리 설정 (프로젝트 루트의 uploads 폴더)
+file:
+  upload-dir: uploads
+
+# 디버깅용 로그 설정
+logging:
+  level:
+    org.springframework.web: DEBUG
+    com.trip_gg: DEBUG
+    com.trip_gg.controller: INFO  # 컨트롤러 로그만
+    com.trip_gg.service: INFO     # 서비스 로그만
