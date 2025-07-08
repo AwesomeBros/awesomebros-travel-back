@@ -40,7 +40,8 @@ public class PostService {
 
         // temp -> uploads 이동
         String finalUrl = moveFileFromTemp(postRequestDto.getUrl());
-        post.setUrl(finalUrl);
+        String serverUrl = "http://localhost:8080";
+        post.setUrl(serverUrl + finalUrl);
         post.setUsers_id(postRequestDto.getUsers_id());
 
         // 🔽 게시글 저장
@@ -55,6 +56,7 @@ public class PostService {
     }
 
     // temp -> uploads 이동 메서드
+    @Transactional
     private String moveFileFromTemp(String tempUrl) throws IOException{
         String fileName = tempUrl.substring(tempUrl.lastIndexOf("/") + 1);
         String tempPath = System.getProperty("user.dir") + "/uploads/temp/" + fileName;
@@ -71,7 +73,7 @@ public class PostService {
         if (!uploadDir.exists()) uploadDir.mkdirs();
 
         if (tempFile.renameTo(destFile)) {
-            return "/uploads/final" + fileName;
+            return "/uploads/final/" + fileName;
         } else {
             throw new IOException("파일 이동 실패");
         }
