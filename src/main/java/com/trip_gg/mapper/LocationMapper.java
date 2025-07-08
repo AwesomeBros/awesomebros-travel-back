@@ -12,4 +12,8 @@ public interface LocationMapper {
     List<Location> findAll();
 
     List<Location> getLocationByPostId(int post_id);
+
+    void deleteLocationByPostId(int id);
+
+    void updateLocation(Location location);
 }

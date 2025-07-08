@@ -70,4 +70,18 @@
         SELECT * FROM posts WHERE id = #{id}
     </select>
 
+    <!-- 게시글 수정 -->
+    <update id="update" parameterType="com.trip_gg.domain.Post">
+        UPDATE posts
+            SET title = #{title},
+                content = #{content},
+                url = #{url},
+                slug = #{slug},
+                countries_id = #{countries_id},
+                cities_id = #{cities_id},
+                districts_id = #{districts_id},
+                updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
 </mapper>

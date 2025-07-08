@@ -55,6 +55,36 @@ public class PostService {
         }
     }
 
+    @Transactional
+    public void update(int id, PostRequestDto postRequestDto) throws IOException, IllegalAccessException{
+        Post post = postRequestDto.toPost();
+        post.setId(id);
+
+        int isValid = postMapper.checkLocationValidity(post.getCountries_id(), post.getCities_id(), post.getDistricts_id());
+        if (isValid == 0) {
+            throw new IllegalAccessException("국가, 도시, 지역 선택이 잘못되었습니다.");
+        }
+
+        String originUrl = postRequestDto.getUrl();
+        String finalUrl = null;
+        if (originUrl != null && !originUrl.isBlank()) {
+            finalUrl = moveFileFromTemp(originUrl);
+        }
+
+        String serverUrl = "http://localhost:8080";
+        post.setUrl(finalUrl != null ? serverUrl + finalUrl : null);
+        post.setUsers_id(postRequestDto.getUsers_id());
+
+        postMapper.update(post);
+
+        locationMapper.deleteLocationByPostId(id);
+        List<Location> locations = postRequestDto.toLocation(id);
+        for (Location loc : locations) {
+            loc.setPost_id(id);
+            locationMapper.insertLocation(loc);
+        }
+    }
+
     // temp -> uploads 이동 메서드
     @Transactional
     private String moveFileFromTemp(String tempUrl) throws IOException{
@@ -114,4 +144,6 @@ public class PostService {
 
         return PostResponseDto.from(post, locationDtos);
     }
+
+
 }

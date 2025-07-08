@@ -21,4 +21,17 @@
         FROM locations
         ORDER BY id DESC
     </select>
+
+    <delete id="deleteLocationByPostId" parameterType="int">
+        DELETE FROM locations
+        WHERE post_id = #{id}
+    </delete>
+
+    <update id="updateLocation" parameterType="com.trip_gg.domain.Location">
+        UPDATE locations
+        SET name = #{name },
+            lat = #{lat},
+            lng = #{lng}
+        WHERE id = #{id}
+    </update>
 </mapper>
