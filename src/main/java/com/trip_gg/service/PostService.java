@@ -30,7 +30,6 @@ public class PostService {
         Post post = postRequestDto.toPost();
         post.setCreated_at(LocalDateTime.now());
 
-        // 유효한 국가/도시/지역 조합인지 확인
         int isValid = postMapper.checkLocationValidity(
                 post.getCountries_id(), post.getCities_id(), post.getDistricts_id()
         );
@@ -38,14 +37,23 @@ public class PostService {
             throw new IllegalAccessException("국가, 도시, 지역 선택이 잘못되었습니다.");
         }
 
-        // temp -> uploads 이동
-        String finalUrl = moveFileFromTemp(postRequestDto.getUrl());
-        String serverUrl = "http://localhost:8080";
-        post.setUrl(serverUrl + finalUrl);
         post.setUsers_id(postRequestDto.getUsers_id());
 
-        // 🔽 게시글 저장
+        // 🔽 먼저 post 저장 (id 먼저 확보 필요)
         postMapper.insertPost(post);
+
+        String originUrl = postRequestDto.getUrl();
+        String serverUrl = "http://localhost:8080";
+        String finalUrl = null;
+
+        // ✅ null 체크 및 temp 경로 확인 후 이동 처리
+        if (originUrl != null && originUrl.contains("/temp/")) {
+            finalUrl = moveFileFromTemp(originUrl, post.getId());
+            post.setUrl(serverUrl + finalUrl); // 서버 경로로 반영
+        }
+
+        // 🔽 게시글 다시 update (url 포함해서)
+        postMapper.update(post);
 
         // 🔽 위치 정보 저장
         List<Location> locations = postRequestDto.toLocation(post.getId());
@@ -55,24 +63,30 @@ public class PostService {
         }
     }
 
+    // 게시글 수정
     @Transactional
-    public void update(int id, PostRequestDto postRequestDto) throws IOException, IllegalAccessException{
+    public void update(int id, PostRequestDto postRequestDto) throws IOException, IllegalAccessException {
         Post post = postRequestDto.toPost();
         post.setId(id);
 
-        int isValid = postMapper.checkLocationValidity(post.getCountries_id(), post.getCities_id(), post.getDistricts_id());
+        int isValid = postMapper.checkLocationValidity(
+                post.getCountries_id(), post.getCities_id(), post.getDistricts_id());
         if (isValid == 0) {
             throw new IllegalAccessException("국가, 도시, 지역 선택이 잘못되었습니다.");
         }
 
         String originUrl = postRequestDto.getUrl();
+        String serverUrl = "http://localhost:8080";
         String finalUrl = null;
-        if (originUrl != null && !originUrl.isBlank()) {
-            finalUrl = moveFileFromTemp(originUrl);
+
+        // ✅ null 체크 및 temp 경로 확인 후 이동 처리
+        if (originUrl != null && originUrl.contains("/temp/")) {
+            finalUrl = moveFileFromTemp(originUrl, id);
+            post.setUrl(serverUrl + finalUrl);
+        } else {
+            post.setUrl(originUrl); // 이미 final 경로이거나 null일 경우 그대로 사용
         }
 
-        String serverUrl = "http://localhost:8080";
-        post.setUrl(finalUrl != null ? serverUrl + finalUrl : null);
         post.setUsers_id(postRequestDto.getUsers_id());
 
         postMapper.update(post);
@@ -85,30 +99,34 @@ public class PostService {
         }
     }
 
-    // temp -> uploads 이동 메서드
+    // 파일 이동 메서드: postId 별 디렉토리 생성
     @Transactional
-    private String moveFileFromTemp(String tempUrl) throws IOException{
+    private String moveFileFromTemp(String tempUrl, int postId) throws IOException {
+        if (tempUrl == null) {
+            throw new IOException("파일 경로가 null입니다.");
+        }
+
         String fileName = tempUrl.substring(tempUrl.lastIndexOf("/") + 1);
         String tempPath = System.getProperty("user.dir") + "/uploads/temp/" + fileName;
-        String destPath = System.getProperty("user.dir") + "/uploads/final/" + fileName;
+        String destDirPath = System.getProperty("user.dir") + "/uploads/final/" + postId;
+        String destPath = destDirPath + "/" + fileName;
 
         File tempFile = new File(tempPath);
+        File destDir = new File(destDirPath);
         File destFile = new File(destPath);
 
         if (!tempFile.exists()) {
             throw new IOException("임시 파일이 존재하지 않습니다: " + tempPath);
         }
 
-        File uploadDir = new File(System.getProperty("user.dir") + "/uploads/final/");
-        if (!uploadDir.exists()) uploadDir.mkdirs();
+        if (!destDir.exists()) destDir.mkdirs(); // 디렉토리 없으면 생성
 
         if (tempFile.renameTo(destFile)) {
-            return "/uploads/final/" + fileName;
+            return "/uploads/final/" + postId + "/" + fileName; // ✅ 상대 경로 반환
         } else {
             throw new IOException("파일 이동 실패");
         }
     }
-
 
     // 게시글 최신순/인기순 불러오기
     public List<PostResponseDto> getSortedPosts(String sort) {
@@ -144,6 +162,4 @@ public class PostService {
 
         return PostResponseDto.from(post, locationDtos);
     }
-
-
 }
