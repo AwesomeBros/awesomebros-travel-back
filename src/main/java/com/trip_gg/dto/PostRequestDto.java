@@ -59,13 +59,13 @@ public class PostRequestDto {
     }
 
     // Location 엔티티로 변환
-    public List<Location> toLocation(int post_id) {
-        return this.locations.stream()
-                .map(coord -> Location.builder()
-                        .name(coord.getName())
-                        .lat(coord.getLat())
-                        .lng(coord.getLng())
-                        .post_id(post_id)
+    public List<Location> toLocation(int posts_id) {
+            return this.locations.stream()
+                    .map(coord -> Location.builder()
+                            .name(coord.getName())
+                            .lat(coord.getLat())
+                            .lng(coord.getLng())
+                            .posts_id(posts_id)
                         .created_at(LocalDateTime.now())
                         .build())
                 .collect(Collectors.toList());

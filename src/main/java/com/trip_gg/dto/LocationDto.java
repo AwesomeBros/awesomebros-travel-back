@@ -14,7 +14,7 @@ public class LocationDto {
     private double lat;
     private double lng;
     private LocalDateTime created_at;
-    private int post_id;
+    private int posts_id;
 
     // Entity -> Dto 변환 메서드
     public static LocationDto from(Location location) {

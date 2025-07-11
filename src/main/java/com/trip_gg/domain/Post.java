@@ -17,7 +17,7 @@ public class Post {
     private Long countries_id;
     private Long cities_id;
     private Long districts_id;
-    private int post_id;
+    private int posts_id;
 
     private String name;
     private double lat;

@@ -50,7 +50,7 @@ public class PostService {
         // 🔽 위치 정보 저장
         List<Location> locations = postRequestDto.toLocation(post.getId());
         for (Location loc : locations) {
-            loc.setPost_id(post.getId());
+            loc.setPosts_id(post.getId());
             locationMapper.insertLocation(loc);
         }
     }
@@ -80,7 +80,7 @@ public class PostService {
         locationMapper.deleteLocationByPostId(id);
         List<Location> locations = postRequestDto.toLocation(id);
         for (Location loc : locations) {
-            loc.setPost_id(id);
+            loc.setPosts_id(id);
             locationMapper.insertLocation(loc);
         }
     }
@@ -141,7 +141,7 @@ public class PostService {
         List<LocationDto> locationDtos = locationList.stream()
                 .map(LocationDto::from)
                 .collect(Collectors.toList());
-
+        System.out.println("=====현재 담고있는 속성=====" + post);
         return PostResponseDto.from(post, locationDtos);
     }
 

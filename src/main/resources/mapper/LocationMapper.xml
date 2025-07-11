@@ -6,14 +6,14 @@
 <mapper namespace="com.trip_gg.mapper.LocationMapper">
 
     <insert id="insertLocation" parameterType="com.trip_gg.domain.Location" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO locations (name, lat, lng, post_id, created_at)
-        VALUES (#{name}, #{lat}, #{lng}, #{post_id}, #{created_at})
+        INSERT INTO locations (name, lat, lng, posts_id, created_at)
+        VALUES (#{name}, #{lat}, #{lng}, #{posts_id}, #{created_at})
     </insert>
 
     <select id="getLocationByPostId" parameterType="int" resultType="com.trip_gg.domain.Location">
-        SELECT id, name, lat, lng, created_at, post_id
+        SELECT id, name, lat, lng, created_at, posts_id
         FROM locations
-        WHERE post_id = #{postId}
+        WHERE posts_id = #{postId}
     </select>
 
     <select id="findAll" resultType="com.trip_gg.domain.Location">
@@ -24,7 +24,7 @@
 
     <delete id="deleteLocationByPostId" parameterType="int">
         DELETE FROM locations
-        WHERE post_id = #{id}
+        WHERE posts_id = #{id}
     </delete>
 
     <update id="updateLocation" parameterType="com.trip_gg.domain.Location">

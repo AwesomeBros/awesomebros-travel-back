@@ -15,7 +15,7 @@ public class Location {
     private double lat;
     private double lng;
     private LocalDateTime created_at;
-    private int post_id;
+    private int posts_id;
 
     @Override
     public String toString() {
@@ -25,7 +25,7 @@ public class Location {
                 ", lat=" + lat +
                 ", lng=" + lng +
                 ", created_at=" + created_at +
-                ", post_id=" + post_id +
+                ", posts_id=" + posts_id +
                 '}';
     }
 }
