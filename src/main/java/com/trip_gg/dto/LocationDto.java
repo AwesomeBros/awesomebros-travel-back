@@ -22,6 +22,8 @@ public class LocationDto {
                 .name(location.getName())
                 .lat(location.getLat())
                 .lng(location.getLng())
+                .posts_id(location.getPosts_id())
+                .created_at(location.getCreated_at())
                 .build();
     }
 }

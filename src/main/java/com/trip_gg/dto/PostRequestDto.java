@@ -16,7 +16,7 @@ public class PostRequestDto {
     private String content;
     private String users_id;
     private String slug;
-    private int viewCount;
+    private int view_count;
 
     // 지역 카테고리
     private Long countries_id;
@@ -46,7 +46,7 @@ public class PostRequestDto {
         post.setUsers_id(this.users_id);
         post.setSlug(this.slug);
         post.setUrl(this.url);
-        post.setViewCount(this.viewCount);
+        post.setView_count(this.view_count);
         post.setCountries_id(this.countries_id);
         post.setCities_id(this.cities_id);
         post.setDistricts_id(this.districts_id);

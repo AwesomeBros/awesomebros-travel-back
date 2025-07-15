@@ -2,12 +2,13 @@ package com.trip_gg.dto;
 
 import com.trip_gg.domain.Comment;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
 
 @Getter
-@AllArgsConstructor
+@Builder
 public class CommentResponseDto {
 
         private int id;
@@ -16,11 +17,11 @@ public class CommentResponseDto {
         private LocalDateTime created_at;
 
         public static CommentResponseDto from(Comment comment) {
-                return new CommentResponseDto(
-                        comment.getId(),
-                        comment.getUsers_id(),
-                        comment.getContent(),
-                        comment.getCreated_at()
-                );
+                return CommentResponseDto.builder()
+                        .id(comment.getId())
+                        .users_id(comment.getUsers_id())
+                        .content(comment.getContent())
+                        .created_at(comment.getCreated_at())
+                        .build();
         }
 }

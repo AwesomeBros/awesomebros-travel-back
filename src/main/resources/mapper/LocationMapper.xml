@@ -10,14 +10,14 @@
         VALUES (#{name}, #{lat}, #{lng}, #{posts_id}, #{created_at})
     </insert>
 
-    <select id="getLocationByPostId" parameterType="int" resultType="com.trip_gg.domain.Location">
+    <select id="getLocationById" parameterType="int" resultType="com.trip_gg.domain.Location">
         SELECT id, name, lat, lng, created_at, posts_id
         FROM locations
-        WHERE posts_id = #{postId}
+        WHERE posts_id = #{posts_id}
     </select>
 
     <select id="findAll" resultType="com.trip_gg.domain.Location">
-        SELECT id, name, lat, lng
+        SELECT id, name, lat, lng, posts_id
         FROM locations
         ORDER BY id DESC
     </select>

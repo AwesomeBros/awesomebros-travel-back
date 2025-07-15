@@ -30,6 +30,8 @@ public class CommentService {
     public List<CommentResponseDto> findCommentsByPostId(int posts_id, int pageParam) {
         int offset = pageParam * PAGE_SIZE;
         List<Comment> list = commentMapper.findCommentsByPostId(posts_id, offset, PAGE_SIZE);
+
+        System.out.println("=====서비스에 담긴 댓글 : " + list + "=====");
         return list.stream()
                 .map(CommentResponseDto::from)
                 .collect(Collectors.toList());

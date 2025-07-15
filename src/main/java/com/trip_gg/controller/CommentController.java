@@ -35,6 +35,7 @@ public class CommentController {
     @GetMapping("/{posts_id}")
     public List<CommentResponseDto> getComments(@PathVariable int posts_id,
                                                 @RequestParam(defaultValue = "0") int pageParam) {
+        System.out.println("=====현재 가져오고 있는 댓글 : " + commentService.findCommentsByPostId(posts_id, pageParam) + "=====");
         return commentService.findCommentsByPostId(posts_id, pageParam);
     }
 }
