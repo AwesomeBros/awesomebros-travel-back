@@ -44,6 +44,9 @@ public class PostService {
         // 🔽 먼저 post 저장 (id 먼저 확보 필요)
         postMapper.insertPost(post);
 
+        // counts 테이블에 기본 row 삽입 (존재하지 않으면)
+        postMapper.upsertCounts(post.getId());
+
         String originUrl = postRequestDto.getUrl();
         String serverUrl = "http://localhost:8080";
         String finalUrl = null;
@@ -92,6 +95,9 @@ public class PostService {
         post.setUsers_id(postRequestDto.getUsers_id());
 
         postMapper.update(post);
+
+        // counts 테이블에 기본 row 삽입 (존재하지 않으면)
+        postMapper.upsertCounts(post.getId());
 
         locationMapper.deleteLocationByPostId(id);
         List<Location> locations = postRequestDto.toLocation(id);
@@ -157,39 +163,51 @@ public class PostService {
     public PostResponseDto getPostById(int id) {
         Post post = postMapper.getPostById(id);
 
-        List<Location> locations = locationMapper.getLocationById(id);
+//        List<Location> locations = locationMapper.getLocationById(id);
 
 //        post.setPosts_id(id);
 
-//        // 🔽 위치 가져오기
-//        List<Location> locationList = locationMapper.getLocationById(id);
-//        List<LocationDto> locationDtos = locationList.stream()
-//                .map(LocationDto::from)
-//                .collect(Collectors.toList());
-//
-//        // 🔽 댓글 가져오기
-//        List<Comment> commentList = post.getComments();
-//        List<CommentResponseDto> commentDtos = commentList.stream()
-//                .map(CommentResponseDto::from)
-//                .collect(Collectors.toList());
+        // 🔽 위치 가져오기
+        List<Location> locationList = locationMapper.getLocationById(id);
+        List<LocationDto> locations = locationList.stream()
+                .map(LocationDto::from)
+                .collect(Collectors.toList());
+
+        // 🔽 댓글 가져오기
+        List<Comment> commentList = post.getComments();
+        List<CommentResponseDto> comments = commentList.stream()
+                .map(CommentResponseDto::from)
+                .collect(Collectors.toList());
 //
 //        // 🔽 디버깅 출력
-        System.out.println("=====현재 담고있는 속성1 : " + post + "=====");
+//        System.out.println("=====현재 담고있는 속성1 : " + post + "=====");
         if (post.getLocations() != null) {
             for (Location loc : post.getLocations()) {
-                System.out.println("=====[Location 정보] posts_id: " + loc.getPosts_id()
-                        + ", name: " + loc.getName()
-                        + ", lat: " + loc.getLat()
-                        + ", lng: " + loc.getLng()
-                );
+//                System.out.println("=====[Location 정보] posts_id: " + loc.getPosts_id()
+//                        + ", name: " + loc.getName()
+//                        + ", lat: " + loc.getLat()
+//                        + ", lng: " + loc.getLng()
+//                );
             }
         } else {
-            System.out.println("===== Location 정보가 없습니다. =====");
+//            System.out.println("===== Location 정보가 없습니다. =====");
+        }
+//        System.out.println("=====현재 담고있는 속성2 : " + post + "=====");
+        if (post.getComments() != null) {
+            for (Comment com : post.getComments()) {
+//                System.out.println("=====[Comment 정보] : " + com.getPosts_id()
+//                        + ", nickname: " + com.getNickname()
+//                        + ", content: " + com.getContent()
+//                        + ", created_at: " + com.getCreated_at()
+//                );
+            }
+        } else {
+//            System.out.println("===== Comment 정보가 없습니다. =====");
         }
 //        System.out.println("=====현재 담고있는 속성2 : " + post.getPosts_id() + "=====");
 //        System.out.println("=====현재 담고있는 속성4 : " + commentDtos + "=====");
 
         // ✅ 위치 + 댓글 포함된 DTO 반환
-        return PostResponseDto.from(post);
+        return PostResponseDto.from(post, locations, comments);
     }
 }

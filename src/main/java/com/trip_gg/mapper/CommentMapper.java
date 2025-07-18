@@ -14,11 +14,12 @@ public interface CommentMapper {
 
     //  특정 게시글의 댓글 목록 (페이징)
     List<Comment> findCommentsByPostId(
-            @Param("posts_id") int posts_id,
-            @Param("offset") int offset,
-            @Param("limit") int limit
+            @Param("posts_id") int posts_id
     );
 
     // 댓글 수 (페이지네이션용)
     int countCommentsByPostId(int posts_id);
+
+    // counts 테이블의 comment_count 증가
+    void increaseCommentCount(@Param("posts_id") int posts_id);
 }

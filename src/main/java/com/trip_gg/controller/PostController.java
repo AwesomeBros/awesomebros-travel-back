@@ -34,8 +34,8 @@ public class PostController {
             postRequestDto.setUsers_id(users_id);
 
             postService.createPost(postRequestDto);
-            System.out.println("=====토큰 정보1 : " + token + "=====");
-            System.out.println("=====토큰 정보2 : " + postService + "=====");
+//            System.out.println("=====토큰 정보1 : " + token + "=====");
+//            System.out.println("=====토큰 정보2 : " + postService + "=====");
             return ResponseEntity.ok("글 작성 완료");
         } catch (IllegalAccessException exception) {
             exception.printStackTrace();
