@@ -15,6 +15,8 @@ public interface PostMapper {
     List<Post> getPostsByCity(String city);
     List<Post> getAllPosts();
     Post getPostById(int id);
+    void update(Post post);
+
 
     // 위치 논리 일관성 검증용 메서드
    /* @Select("""

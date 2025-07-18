@@ -16,7 +16,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class ImageService {
     private final String UPLOAD_BASE_DIR = System.getProperty("user.dir");
-    private final String UPLOAD_SUB_DIR = "/uploads/temp/";
+    private final String UPLOAD_SUB_DIR = "uploads/temp/";
 
     public String uploadImage(MultipartFile file) throws IOException{
         Path uploadPath = Paths.get(UPLOAD_BASE_DIR + UPLOAD_SUB_DIR);

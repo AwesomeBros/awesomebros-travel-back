@@ -5,72 +5,105 @@
 
 <mapper namespace="com.trip_gg.mapper.PostMapper">
 
-    <!-- 게시물 작성 -->
-<!--    <insert id="insertPost" parameterType="com.trip_gg.domain.Post">-->
-<!--            INSERT INTO posts (title, content, users_id, cities_id, slug, viewCount, createdAt)-->
-<!--            VALUES (#{title}, #{content}, #{users_id}, #{cities_id}, #{slug}, #{viewCount}, #{createdAt})-->
-<!--    </insert>-->
+    <!-- ✅ 기본 Post 매핑 -->
+    <resultMap id="PostResultMap" type="com.trip_gg.domain.Post">
+        <id property="id" column="id" />
+        <result property="title" column="title" />
+        <result property="content" column="content" />
+        <result property="users_id" column="users_id" />
+        <result property="slug" column="slug" />
+        <result property="url" column="url" />
+        <result property="view_count" column="view_count" />
+        <result property="countries_id" column="countries_id" />
+        <result property="cities_id" column="cities_id" />
+        <result property="districts_id" column="districts_id" />
+        <result property="created_at" column="created_at" />
+    </resultMap>
+
+    <!-- ✅ 댓글 + 위치 포함 Post 매핑 -->
+    <resultMap id="PostWithCommentAndLocationResultMap" type="com.trip_gg.domain.Post" extends="PostResultMap">
+        <!-- Comment 리스트 -->
+        <collection property="comments" ofType="com.trip_gg.domain.Comment">
+            <id property="id" column="comment_id" />
+            <result property="users_id" column="comment_users_id" />
+            <result property="content" column="comment_content" />
+            <result property="created_at" column="comment_created_at" />
+        </collection>
+        <!-- Location 리스트 -->
+        <collection property="locations" ofType="com.trip_gg.domain.Location">
+            <id property="id" column="location_id" />
+            <result property="name" column="location_name" />
+            <result property="lat" column="location_lat" />
+            <result property="lng" column="location_lng" />
+            <result property="created_at" column="location_created_at" />
+            <result property="posts_id" column="location_posts_id" />
+        </collection>
+    </resultMap>
+
+    <!-- ✅ 게시글 작성 -->
     <insert id="insertPost" parameterType="com.trip_gg.dto.PostRequestDto" useGeneratedKeys="true" keyProperty="id">
-            INSERT INTO posts (
-                users_id,
-                countries_id,
-                cities_id,
-                districts_id,
-                title,
-                content,
-                slug,
-                url,
-                viewCount,
-                created_at
-            )
-            VALUES (
-               #{users_id},
-               #{countries_id},
-               #{cities_id},
-               #{districts_id},
-               #{title},
-               #{content},
-               #{slug},
-               #{url},
-               #{viewCount},
-               #{created_at}
-            )
+        INSERT INTO posts (
+            users_id, countries_id, cities_id, districts_id, title,
+            content, slug, url, view_count, created_at
+        )
+        VALUES (
+                   #{users_id}, #{countries_id}, #{cities_id}, #{districts_id}, #{title},
+                   #{content}, #{slug}, #{url}, #{view_count}, #{created_at}
+               )
     </insert>
 
-    <!-- 최신 게시글 불러오기 -->
-    <select id="findLatestPosts" resultType="com.trip_gg.domain.Post">
-        SELECT id, title, content, users_id, cities_id, slug, viewCount, created_at
-        FROM posts
-        ORDER BY created_at DESC
-            LIMIT 8
+    <!-- ✅ 최신 게시글 8개 -->
+    <select id="findLatestPosts" resultMap="PostResultMap">
+        SELECT * FROM posts ORDER BY created_at DESC LIMIT 8
     </select>
 
-    <!-- 인기 게시글 불러오기 -->
-    <select id="findPopularPosts" resultType="com.trip_gg.domain.Post">
-        SELECT id, title, content, viewCount, created_at
-        FROM posts
-        ORDER BY viewCount DESC
-            LIMIT 8
+    <!-- ✅ 인기 게시글 8개 -->
+    <select id="findPopularPosts" resultMap="PostResultMap">
+        SELECT * FROM posts ORDER BY view_count DESC LIMIT 8
     </select>
 
-    <!-- 지역별 게시글 불러오기 -->
-    <select id="getPostsByCity" parameterType="String" resultType="com.trip_gg.domain.Post">
-        SELECT p.id, p.title, p.content, p.users_id, p.cities_id, p.viewCount, p.created_at
+    <!-- ✅ 특정 도시 게시글 -->
+    <select id="getPostsByCity" parameterType="String" resultMap="PostResultMap">
+        SELECT p.*
         FROM posts p
-        JOIN cities c ON p.cities_id = c.id
+                 JOIN cities c ON p.cities_id = c.id
         WHERE c.name = #{city}
         ORDER BY p.created_at DESC
     </select>
 
-    <!-- 게시글 목록 불러오기 -->
-    <select id="getAllPosts" resultType="com.trip_gg.domain.Post">
-        SELECT * FROM posts
-            ORDER BY created_at DESC
+    <!-- ✅ 전체 게시글 목록 -->
+    <select id="getAllPosts" resultMap="PostResultMap">
+        SELECT * FROM posts ORDER BY created_at DESC
     </select>
 
-    <!-- 게시글 상세 불러오기 -->
-    <select id="getPostById" parameterType="int" resultType="com.trip_gg.domain.Post">
-        SELECT * FROM posts WHERE id = #{id}
+    <!-- ✅ 게시글 상세 (댓글+위치 포함) -->
+    <select id="getPostById" parameterType="int" resultMap="PostWithCommentAndLocationResultMap">
+        SELECT
+            p.id, p.title, p.content, p.users_id, p.slug, p.url,
+            p.countries_id, p.cities_id, p.districts_id, p.created_at,
+
+            co.view_count,co.like_count, co.comment_count,
+
+            c.id AS comment_id, c.users_id AS comment_users_id,
+            c.content AS comment_content, c.created_at AS comment_created_at,
+
+            l.id AS location_id, l.name AS location_name, l.lat AS location_lat,
+            l.lng AS location_lng, l.created_at AS location_created_at,
+            l.posts_id AS location_posts_id
+        FROM posts p
+                 LEFT JOIN comments  c ON p.id = c.posts_id
+                 LEFT JOIN locations l ON p.id = l.posts_id
+                 LEFT JOIN counts co ON p.id = co.posts_id
+        WHERE p.id = #{id}
     </select>
+
+    <!-- ✅ 게시글 수정 -->
+    <update id="update" parameterType="com.trip_gg.domain.Post">
+        UPDATE posts
+        SET title = #{title}, content = #{content}, url = #{url}, slug = #{slug},
+            countries_id = #{countries_id}, cities_id = #{cities_id},
+            districts_id = #{districts_id}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
 
 </mapper>

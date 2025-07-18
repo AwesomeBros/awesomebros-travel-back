@@ -14,7 +14,7 @@ public class LocationDto {
     private double lat;
     private double lng;
     private LocalDateTime created_at;
-    private int post_id;
+    private int posts_id;
 
     // Entity -> Dto 변환 메서드
     public static LocationDto from(Location location) {
@@ -22,6 +22,8 @@ public class LocationDto {
                 .name(location.getName())
                 .lat(location.getLat())
                 .lng(location.getLng())
+                .posts_id(location.getPosts_id())
+                .created_at(location.getCreated_at())
                 .build();
     }
 }

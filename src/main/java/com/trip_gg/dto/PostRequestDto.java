@@ -16,7 +16,7 @@ public class PostRequestDto {
     private String content;
     private String users_id;
     private String slug;
-    private int viewCount;
+    private int view_count;
 
     // 지역 카테고리
     private Long countries_id;
@@ -46,7 +46,7 @@ public class PostRequestDto {
         post.setUsers_id(this.users_id);
         post.setSlug(this.slug);
         post.setUrl(this.url);
-        post.setViewCount(this.viewCount);
+        post.setView_count(this.view_count);
         post.setCountries_id(this.countries_id);
         post.setCities_id(this.cities_id);
         post.setDistricts_id(this.districts_id);
@@ -59,13 +59,13 @@ public class PostRequestDto {
     }
 
     // Location 엔티티로 변환
-    public List<Location> toLocation(int post_id) {
-        return this.locations.stream()
-                .map(coord -> Location.builder()
-                        .name(coord.getName())
-                        .lat(coord.getLat())
-                        .lng(coord.getLng())
-                        .post_id(post_id)
+    public List<Location> toLocation(int posts_id) {
+            return this.locations.stream()
+                    .map(coord -> Location.builder()
+                            .name(coord.getName())
+                            .lat(coord.getLat())
+                            .lng(coord.getLng())
+                            .posts_id(posts_id)
                         .created_at(LocalDateTime.now())
                         .build())
                 .collect(Collectors.toList());

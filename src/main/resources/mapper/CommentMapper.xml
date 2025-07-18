@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.trip_gg.mapper.CommentMapper">
+
+    <!-- 댓글 저장 -->
+    <insert id="insertComment" parameterType="com.trip_gg.domain.Comment" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO comments (posts_id, users_id, content, created_at)
+        VALUES (#{posts_id}, #{users_id}, #{content}, #{created_at})
+    </insert>
+
+    <!-- 게시글별 댓글 조회 (페이징) -->
+    <select id="findCommentsByPostId" resultType="com.trip_gg.domain.Comment">
+        SELECT *
+        FROM comments
+        WHERE posts_id = #{posts_id}
+        ORDER BY id DESC
+    </select>
+
+    <!-- 총 개수 -->
+    <select id="countCommentsByPostId" resultType="int">
+        SELECT COUNT(*) FROM comments WHERE posts_id = #{posts_id}
+    </select>
+
+</mapper>

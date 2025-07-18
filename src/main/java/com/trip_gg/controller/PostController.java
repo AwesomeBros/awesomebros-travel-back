@@ -34,6 +34,8 @@ public class PostController {
             postRequestDto.setUsers_id(users_id);
 
             postService.createPost(postRequestDto);
+            System.out.println("=====토큰 정보1 : " + token + "=====");
+            System.out.println("=====토큰 정보2 : " + postService + "=====");
             return ResponseEntity.ok("글 작성 완료");
         } catch (IllegalAccessException exception) {
             exception.printStackTrace();
@@ -70,6 +72,25 @@ public class PostController {
     @GetMapping("/{id}")
     public ResponseEntity<PostResponseDto> getPostById(@PathVariable int id) {
         PostResponseDto post = postService.getPostById(id);
+//        System.out.println("=====CONTROLLER POST에 들어있는 데이터 : " + post.getPosts_id() + "=====");
         return ResponseEntity.ok(post);
+    }
+
+    // 게시글 수정
+    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> update(@RequestBody PostRequestDto postRequestDto,
+                                         @PathVariable int id,
+                                         HttpServletRequest request) {
+        try {
+            String token = jwtTokenProvider.resolveToken(request);
+            String users_id = jwtTokenProvider.getUserIdFromToken(token);
+            postRequestDto.setUsers_id(users_id);
+
+            postService.update(id, postRequestDto);
+            return ResponseEntity.ok("수정 완료");
+        } catch (IOException | IllegalAccessException e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("수정 중 오류 발생: " + e.getMessage());
+        }
     }
 }

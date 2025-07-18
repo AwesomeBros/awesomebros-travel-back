@@ -8,8 +8,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
 
     private final String UPLOAD_BASE_DIR = System.getProperty("user.dir");
-    private final String UPLOAD_MAPPING_PATH = "/uploads/temp/";
-    private final String UPLOAD_FILE_SYSTEM_PATH = UPLOAD_BASE_DIR + "/uploads/temp/";
+    private final String UPLOAD_MAPPING_PATH = "/uploads/";
+    private final String UPLOAD_FILE_SYSTEM_PATH = UPLOAD_BASE_DIR + "/uploads/";
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
