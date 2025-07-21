@@ -20,7 +20,6 @@ public class PostResponseDto {
     private String slug;
 //    private String fileUrl;
     private String url;
-    private int view_count;
     private LocalDateTime created_at;
 
     // 지역 카테고리
@@ -29,8 +28,8 @@ public class PostResponseDto {
     private Long districts_id;
 
     private List<LocationDto> locations;
-
     private List<CommentResponseDto> comments;
+    private List<CountResponseDto> counts;
 
     // 기본 변환(좌표 없이)
     public static PostResponseDto from(Post post) {
@@ -44,7 +43,6 @@ public class PostResponseDto {
                 .districts_id(post.getDistricts_id())
                 .slug(post.getSlug())
                 .url(post.getUrl())
-                .view_count(post.getView_count())
                 .created_at(post.getCreated_at())
                 .build();
     }
@@ -61,14 +59,13 @@ public class PostResponseDto {
                 .districts_id(post.getDistricts_id())
                 .slug(post.getSlug())
                 .url(post.getUrl())
-                .view_count(post.getView_count())
                 .created_at(post.getCreated_at())
                 .locations(locations)
                 .build();
     }
 
-    // ✅ 위치 + 댓글 모두 포함 변환
-    public static PostResponseDto from(Post post, List<LocationDto> locations, List<CommentResponseDto> comments) {
+    // 위치 , 댓글, 카운트 모두 포함 변환
+    public static PostResponseDto from(Post post, List<LocationDto> locations, List<CommentResponseDto> comments, List<CountResponseDto> counts) {
         return PostResponseDto.builder()
                 .id(post.getId())
                 .title(post.getTitle())
@@ -79,10 +76,10 @@ public class PostResponseDto {
                 .districts_id(post.getDistricts_id())
                 .slug(post.getSlug())
                 .url(post.getUrl())
-                .view_count(post.getView_count())
                 .created_at(post.getCreated_at())
                 .locations(locations)
                 .comments(comments)
+                .counts(counts)
                 .build();
     }
 

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.trip_gg.mapper.CountMapper">
+
+    <resultMap id="CountResultMap" type="com.trip_gg.domain.Count">
+        <id property="posts_id" column="posts_id"/>
+        <result property="view_count" column="view_count"/>
+        <result property="comment_count" column="comment_count"/>
+        <result property="like_count" column="like_count"/>
+    </resultMap>
+
+    <select id="getCountByPostId" parameterType="int" resultMap="CountResultMap">
+        SELECT posts_id, view_count, comment_count, like_count
+        FROM counts
+        WHERE posts_id = #{posts_id}
+    </select>
+
+
+</mapper>

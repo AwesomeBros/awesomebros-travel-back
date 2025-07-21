@@ -16,7 +16,7 @@ public interface PostMapper {
     List<Post> getAllPosts();
     Post getPostById(int id);
     void update(Post post);
-
+    void upsertCounts(@Param("posts_id") int posts_id);
 
     // 위치 논리 일관성 검증용 메서드
    /* @Select("""

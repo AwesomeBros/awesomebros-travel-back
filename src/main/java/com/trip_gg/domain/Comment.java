@@ -15,5 +15,6 @@ public class Comment {
     private int posts_id;
     private String users_id;
     private String content;
+    private String nickname;
     private LocalDateTime created_at;
 }

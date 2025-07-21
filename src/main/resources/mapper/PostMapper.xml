@@ -13,7 +13,7 @@
         <result property="users_id" column="users_id" />
         <result property="slug" column="slug" />
         <result property="url" column="url" />
-        <result property="view_count" column="view_count" />
+<!--        <result property="view_count" column="view_count" />-->
         <result property="countries_id" column="countries_id" />
         <result property="cities_id" column="cities_id" />
         <result property="districts_id" column="districts_id" />
@@ -22,14 +22,18 @@
 
     <!-- ✅ 댓글 + 위치 포함 Post 매핑 -->
     <resultMap id="PostWithCommentAndLocationResultMap" type="com.trip_gg.domain.Post" extends="PostResultMap">
-        <!-- Comment 리스트 -->
+
+        <!-- ✅ Comment 리스트 -->
         <collection property="comments" ofType="com.trip_gg.domain.Comment">
             <id property="id" column="comment_id" />
+            <result property="posts_id" column="comment_posts_id"/>
             <result property="users_id" column="comment_users_id" />
             <result property="content" column="comment_content" />
             <result property="created_at" column="comment_created_at" />
+            <result property="nickname" column="comment_nickname" />
         </collection>
-        <!-- Location 리스트 -->
+
+        <!-- ✅ Location 리스트 -->
         <collection property="locations" ofType="com.trip_gg.domain.Location">
             <id property="id" column="location_id" />
             <result property="name" column="location_name" />
@@ -44,13 +48,29 @@
     <insert id="insertPost" parameterType="com.trip_gg.dto.PostRequestDto" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO posts (
             users_id, countries_id, cities_id, districts_id, title,
-            content, slug, url, view_count, created_at
+            content, slug, url, created_at
         )
         VALUES (
                    #{users_id}, #{countries_id}, #{cities_id}, #{districts_id}, #{title},
-                   #{content}, #{slug}, #{url}, #{view_count}, #{created_at}
+                   #{content}, #{slug}, #{url}, #{created_at}
                )
     </insert>
+
+    <insert id="upsertCounts" parameterType="int">
+        INSERT INTO counts
+            (posts_id, like_count, view_count, comment_count)
+        VALUES
+            ( #{posts_id},
+            (SELECT COUNT(*) FROM likes WHERE posts_id = #{posts_id}),
+            0,
+            (SELECT COUNT(*) FROM comments WHERE posts_id = #{posts_id})
+            )
+        ON DUPLICATE KEY UPDATE
+            like_count = VALUES(like_count),z
+            view_count = VALUES(view_count),
+            comment_count = VALUES(comment_count)
+    </insert>
+
 
     <!-- ✅ 최신 게시글 8개 -->
     <select id="findLatestPosts" resultMap="PostResultMap">
@@ -82,16 +102,26 @@
             p.id, p.title, p.content, p.users_id, p.slug, p.url,
             p.countries_id, p.cities_id, p.districts_id, p.created_at,
 
-            co.view_count,co.like_count, co.comment_count,
+            co.view_count, co.like_count, co.comment_count,
 
-            c.id AS comment_id, c.users_id AS comment_users_id,
-            c.content AS comment_content, c.created_at AS comment_created_at,
+            c.id AS comment_id,
+            c.users_id AS comment_users_id,
+            c.content AS comment_content,
+            c.created_at AS comment_created_at,
+            c.posts_id AS comment_posts_id,
 
-            l.id AS location_id, l.name AS location_name, l.lat AS location_lat,
-            l.lng AS location_lng, l.created_at AS location_created_at,
+            u.nickname AS comment_nickname,
+
+            l.id AS location_id,
+            l.name AS location_name,
+            l.lat AS location_lat,
+            l.lng AS location_lng,
+            l.created_at AS location_created_at,
             l.posts_id AS location_posts_id
+
         FROM posts p
-                 LEFT JOIN comments  c ON p.id = c.posts_id
+                 LEFT JOIN comments c ON p.id = c.posts_id
+                 LEFT JOIN users u ON c.users_id = u.id
                  LEFT JOIN locations l ON p.id = l.posts_id
                  LEFT JOIN counts co ON p.id = co.posts_id
         WHERE p.id = #{id}
