@@ -66,7 +66,7 @@
             (SELECT COUNT(*) FROM comments WHERE posts_id = #{posts_id})
             )
         ON DUPLICATE KEY UPDATE
-            like_count = VALUES(like_count),
+            like_count = VALUES(like_count),z
             view_count = VALUES(view_count),
             comment_count = VALUES(comment_count)
     </insert>

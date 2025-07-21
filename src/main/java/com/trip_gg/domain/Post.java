@@ -13,7 +13,6 @@ public class Post {
     private String users_id;
     private String slug;
     private String url;
-    private int view_count;
 
     private Long countries_id;
     private Long cities_id;
@@ -28,4 +27,5 @@ public class Post {
 
     private List<Comment> comments;
     private List<Location> locations;
+    private List<Count> counts;
 }
