@@ -23,4 +23,7 @@ public interface LikeMapper {
 
     // ✅ 좋아요 수 조회
     int selectLike_count(@Param("posts_id") int posts_id);
+
+    // 좋아요 표시
+    boolean existsLike(@Param("posts_id") int posts_id, @Param("users_id") String users_id);
 }

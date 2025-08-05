@@ -46,4 +46,10 @@
         WHERE posts_id = #{posts_id}
     </select>
 
+    <!-- 좋아요 토글 -->
+    <select id="existsLike" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM likes
+        WHERE posts_id = #{posts_id} AND users_id = #{users_id}
+    </select>
 </mapper>
