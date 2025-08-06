@@ -27,4 +27,9 @@ public class LikeService {
     public int getLike_count(int posts_id) {
         return likeMapper.selectLike_count(posts_id);
     }
+
+    // 좋아요 여부 반환
+    public boolean isLiked(int posts_id, String users_id) {
+        return likeMapper.existsLike(posts_id, users_id);
+    }
 }
