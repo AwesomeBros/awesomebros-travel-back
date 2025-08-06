@@ -3,10 +3,10 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.trip_gg.mapper.CommentMapper">
+<mapper namespace="com.trip_gg.comment.CommentMapper">
 
     <!-- ✅ 댓글 저장 -->
-    <insert id="insertComment" parameterType="com.trip_gg.domain.Comment" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insertComment" parameterType="com.trip_gg.comment.Comment" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO comments (posts_id, users_id, content, created_at)
         VALUES (#{posts_id}, #{users_id}, #{content}, #{created_at})
     </insert>
@@ -19,7 +19,7 @@
     </update>
 
     <!-- ✅ 댓글 ResultMap 정의 -->
-    <resultMap id="CommentResultMap" type="com.trip_gg.domain.Comment">
+    <resultMap id="CommentResultMap" type="com.trip_gg.comment.Comment">
         <id property="id" column="id"/>
         <result property="posts_id" column="posts_id"/>
         <result property="users_id" column="users_id"/>

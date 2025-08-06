@@ -3,9 +3,9 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.trip_gg.mapper.CountMapper">
+<mapper namespace="com.trip_gg.count.CountMapper">
 
-    <resultMap id="CountResultMap" type="com.trip_gg.domain.Count">
+    <resultMap id="CountResultMap" type="com.trip_gg.count.Count">
         <id property="posts_id" column="posts_id"/>
         <result property="view_count" column="view_count"/>
         <result property="comment_count" column="comment_count"/>

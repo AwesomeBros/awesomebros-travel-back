@@ -1,8 +1,10 @@
 package com.trip_gg.jwt;
 
+import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +13,8 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @RequiredArgsConstructor
@@ -21,11 +25,14 @@ public class JwtTokenProvider {
 
     private Key key;
 
-    // 액세스 토큰 유효시간: 30분
-    private final long accessTokenValidTime = 1000L * 60 * 30;
+    // 액세스 토큰 유효시간: 24시간
+    private final long accessTokenValidTime = 1000L * 60 * 60 * 24;
 
     // 리프레시 토큰 유효시간: 7일
     private final long refreshTokenValidTime = 1000L * 60 * 60 * 24 * 7;
+
+    // ✅ 메모리 기반 RefreshToken 저장소 (실제 서비스에서는 Redis나 DB 사용)
+    private final Map<String, String> refreshTokenStore = new ConcurrentHashMap<>();
 
     @PostConstruct
     protected void init() {
@@ -39,12 +46,13 @@ public class JwtTokenProvider {
         Date validity = new Date(now.getTime() + accessTokenValidTime);
 
         return Jwts.builder()
-                .setSubject(userId) // users_id 저장
+                .setSubject(userId)
                 .setIssuedAt(now)
                 .setExpiration(validity)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
+
 
     // ✅ 리프레시 토큰 생성
     public String generateRefreshToken(String userId) {
@@ -80,14 +88,25 @@ public class JwtTokenProvider {
         }
     }
 
-    // ✅ 요청 헤더에서 Bearer 토큰 추출
     public String resolveToken(HttpServletRequest request) {
+        // 1. Authorization 헤더에서 Bearer 토큰 추출
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7); // "Bearer " 제거
+            return bearerToken.substring(7);
         }
+
+        // 2. 쿠키에서 accessToken 찾기
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("accessToken".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+
         return null;
     }
+
 
     // ✅ 사용자 ID 확인용 alias
     public String getUsername(String token) {
@@ -99,5 +118,15 @@ public class JwtTokenProvider {
         long currentEpochMillis = Instant.now().toEpochMilli();
         long expiryEpochMillis = currentEpochMillis + accessTokenValidTime;
         return expiryEpochMillis;
+    }
+
+    // ✅ RefreshToken 저장
+    public void save(String userId, String refreshToken) {
+        refreshTokenStore.put(userId, refreshToken);
+    }
+
+    // ✅ RefreshToken 조회
+    public String findByUserId(String userId) {
+        return refreshTokenStore.get(userId);
     }
 }

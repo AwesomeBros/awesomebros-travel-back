@@ -3,10 +3,10 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.trip_gg.mapper.LikeMapper">
+<mapper namespace="com.trip_gg.like.LikeMapper">
 
     <!-- ✅ 좋아요 여부 확인 -->
-    <select id="checkLiked" resultType="Integer">
+    <select id="isLiked" resultType="Integer">
         SELECT 1
         FROM likes
         WHERE posts_id = #{posts_id} AND users_id = #{users_id}
@@ -44,6 +44,16 @@
         SELECT like_count
         FROM counts
         WHERE posts_id = #{posts_id}
+    </select>
+
+    <select id="findLikedPostList" resultType="int">
+        SELECT DISTINCT posts_id
+        FROM likes
+        WHERE posts_id IN
+        <foreach collection="postList" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND users_id = #{users_id}
     </select>
 
 </mapper>

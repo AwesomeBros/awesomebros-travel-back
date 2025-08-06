@@ -26,7 +26,7 @@ spring:
       max-request-size: 10MB
 
 mybatis:
-  mapper-locations: classpath:/mapper/**/*.xml
+  mapper-locations: classpath:/mapper/*.xml
   type-aliases-package: com.trip_gg.domain
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

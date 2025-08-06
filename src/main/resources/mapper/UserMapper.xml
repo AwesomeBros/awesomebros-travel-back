@@ -3,16 +3,16 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.trip_gg.mapper.UserMapper">
+<mapper namespace="com.trip_gg.user.UserMapper">
 
     <!-- 회원가입 -->
-    <insert id="insertUser" parameterType="com.trip_gg.domain.User">
+    <insert id="insertUser" parameterType="com.trip_gg.user.User">
         INSERT INTO users (username, password, email, nickname, created_at)
         VALUES (#{username}, #{password}, #{email}, #{nickname}, #{created_at})
     </insert>
 
     <!-- 사용자 조회 (로그인용) -->
-    <select id="findByUsername" parameterType="String" resultType="com.trip_gg.domain.User">
+    <select id="findByUsername" parameterType="String" resultType="com.trip_gg.user.User">
         SELECT id, username, password, email, role, created_at
         FROM users
         WHERE username = #{username}
