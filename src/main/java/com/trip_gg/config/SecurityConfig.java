@@ -30,6 +30,7 @@ public class SecurityConfig {
                                 "/api/posts/cities",
                                 "/api/posts/cities/**",
                                 "/api/auth/**",
+                                "/api/users/**",
                                 "/api/countries/**",
                                 "/api/cities/**",
                                 "/api/districts/**",
@@ -50,10 +51,9 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.addAllowedOrigin("http://localhost:3000");
-        configuration.addAllowedOrigin("*"); // 🔥 성공한 설정: 모든 Origin 허용 (개발용)
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
-        configuration.setAllowCredentials(false); // 🔥 성공한 설정: false (*)와 함께 사용
+        configuration.setAllowCredentials(true); // 🔥 성공한 설정: false (*)와 함께 사용
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

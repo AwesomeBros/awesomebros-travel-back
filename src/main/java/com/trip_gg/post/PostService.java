@@ -161,6 +161,10 @@ public class PostService {
         return postMapper.getAllPosts();
     }
 
+    public void increaseViewCount(int id) {
+        postMapper.updateViewCount(id);
+    }
+
     public PostResponseDto getPostById(int id, String users_id) {
         Post post = postMapper.getPostById(id);
 
@@ -183,4 +187,5 @@ public class PostService {
 
             return PostResponseDto.from(post, locations, comments, counts, liked); // ✅ liked 값 포함
     }
+
 }

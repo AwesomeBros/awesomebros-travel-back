@@ -1,7 +1,6 @@
 package com.trip_gg.user;
 
 import com.trip_gg.jwt.JwtTokenProvider;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -123,17 +122,17 @@ public class UserController {
         }
 
         // 3️⃣ 토큰에서 userId 추출
-        String userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
+        String users_id = jwtTokenProvider.getUserIdFromToken(refreshToken);
 
         // 4️⃣ 저장된 토큰과 비교
-        String savedToken = jwtTokenProvider.findByUserId(userId);
+        String savedToken = jwtTokenProvider.findByUserId(users_id);
         if (savedToken == null || !refreshToken.equals(savedToken)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("저장된 토큰과 일치하지 않음");
         }
 
         // 5️⃣ AccessToken 새로 발급
-        String newAccessToken = jwtTokenProvider.generateToken(userId);
+        String newAccessToken = jwtTokenProvider.generateToken(users_id);
 
         // 6️⃣ 응답
         return ResponseEntity.ok(Collections.singletonMap("accessToken", newAccessToken));

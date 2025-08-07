@@ -41,12 +41,12 @@ public class JwtTokenProvider {
     }
 
     // ✅ 액세스 토큰 생성
-    public String generateToken(String userId) {
+    public String generateToken(String users_id) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + accessTokenValidTime);
 
         return Jwts.builder()
-                .setSubject(userId)
+                .setSubject(users_id)
                 .setIssuedAt(now)
                 .setExpiration(validity)
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -55,12 +55,12 @@ public class JwtTokenProvider {
 
 
     // ✅ 리프레시 토큰 생성
-    public String generateRefreshToken(String userId) {
+    public String generateRefreshToken(String users_id) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + refreshTokenValidTime);
 
         return Jwts.builder()
-                .setSubject(userId)
+                .setSubject(users_id)
                 .setIssuedAt(now)
                 .setExpiration(validity)
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -121,12 +121,12 @@ public class JwtTokenProvider {
     }
 
     // ✅ RefreshToken 저장
-    public void save(String userId, String refreshToken) {
-        refreshTokenStore.put(userId, refreshToken);
+    public void save(String users_id, String refreshToken) {
+        refreshTokenStore.put(users_id, refreshToken);
     }
 
     // ✅ RefreshToken 조회
-    public String findByUserId(String userId) {
-        return refreshTokenStore.get(userId);
+    public String findByUserId(String users_id) {
+        return refreshTokenStore.get(users_id);
     }
 }

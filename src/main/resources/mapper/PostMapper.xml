@@ -56,6 +56,7 @@
                )
     </insert>
 
+    <!-- 카운트 업데이트 -->
     <insert id="upsertCounts" parameterType="int">
         INSERT INTO counts
             (posts_id, like_count, view_count, comment_count)
@@ -142,4 +143,21 @@
         WHERE id = #{id}
     </update>
 
+    <!-- ✅ 조회수 증가 -->
+    <update id="updateViewCount" parameterType="int">
+        UPDATE posts
+        SET view_count = view_count + 1
+        WHERE id = #{id}
+    </update>
+
+    <!-- ✅ 위치 일관성 체크 -->
+    <select id="checkLocationValidity" resultType="int">
+        SELECT COUNT(*)
+        FROM districts d
+                 JOIN cities c ON d.cities_id = c.id
+                 JOIN countries co ON c.countries_id = co.id
+        WHERE co.id = #{countries_id}
+          AND c.id = #{cities_id}
+          AND d.id = #{districts_id}
+    </select>
 </mapper>

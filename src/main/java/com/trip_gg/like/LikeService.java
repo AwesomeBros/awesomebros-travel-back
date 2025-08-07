@@ -29,7 +29,7 @@ public class LikeService {
     }
 
     // 좋아요 여부 반환
-    public boolean isLiked(int posts_id, String users_id) {
-        return likeMapper.existsLike(posts_id, users_id);
+    public Integer isLiked(int posts_id, String users_id) {
+        return likeMapper.isLiked(posts_id, users_id);
     }
 }
