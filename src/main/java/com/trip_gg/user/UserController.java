@@ -1,3 +1,5 @@
+// 파일: src/main/java/com/trip_gg/user/UserController.java   // [Controller 파일]
+
 package com.trip_gg.user;
 
 import com.trip_gg.jwt.JwtTokenProvider;
@@ -9,10 +11,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,17 +28,14 @@ public class UserController {
     // 회원가입
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody @Valid UserRequestDto dto) {
-//        System.out.println("dto: " + dto);
         // 중복 체크
         if (userService.existsByUsername(dto.getUsername())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("이미 사용중인 아이디입니다.");
         }
-
         if (userService.existsByEmail(dto.getEmail())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("이미 사용중인 이메일입니다.");
         }
-
-        userService.register(dto); // UserRequestDto → User 변환은 Service 내부에서 처리
+        userService.register(dto);
         return ResponseEntity.ok("회원가입 성공");
     }
 
@@ -48,34 +44,32 @@ public class UserController {
     public ResponseEntity<?> login(@RequestBody UserRequestDto dto, HttpServletResponse response) {
         try {
             User storedUser = userService.findByUsername(dto.getUsername());
-
             if (storedUser == null || !userService.checkLogin(dto.getPassword(), storedUser.getPassword())) {
                 return ResponseEntity.status(401).body("아이디 또는 비밀번호가 잘못되었습니다");
             }
 
-            // AccessToken, RefreshToken 발급
+            // 토큰 발급
             String accessToken = jwtTokenProvider.generateToken(storedUser.getId());
             String refreshToken = jwtTokenProvider.generateRefreshToken(storedUser.getId());
 
-            // RefreshToken 저장 (DB or Redis)
+            // RefreshToken 저장 (메모리/Redis/DB)
             jwtTokenProvider.save(storedUser.getId(), refreshToken);
 
-            // Access Token 쿠키
+            // ✅ 개발환경용 쿠키 옵션 조정
             ResponseCookie accessCookie = ResponseCookie.from("accessToken", accessToken)
                     .httpOnly(true)
-                    .secure(true)
+                    .secure(false)            // ★ 변경: 로컬 HTTP에서 쿠키 전송되도록
                     .path("/")
-                    .maxAge(60 * 60 * 12) // 12시간
-                    .sameSite("Strict")
+                    .maxAge(60 * 60 * 12)
+                    .sameSite("Lax")          // ★ 변경: 엄격 모드 → Lax
                     .build();
 
-            // Refresh Token 쿠키
             ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
                     .httpOnly(true)
-                    .secure(true)
+                    .secure(false)            // ★ 변경
                     .path("/")
-                    .maxAge(60 * 60 * 24 * 7) // 7일
-                    .sameSite("Strict")
+                    .maxAge(60 * 60 * 24 * 7)
+                    .sameSite("Lax")          // ★ 변경
                     .build();
 
             response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
@@ -99,13 +93,43 @@ public class UserController {
         }
     }
 
+    // ✅ 프로필 조회(인증 필요): 프론트가 바로 호출하는 엔드포인트
+    @GetMapping("/profile")
+    public ResponseEntity<?> profile(HttpServletRequest request) {
+        // 쿠키/헤더에서 토큰 추출
+        String token = jwtTokenProvider.resolveToken(request);
+        if (token == null || !jwtTokenProvider.validateToken(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("error", "인증이 필요합니다."));
+        }
+
+        // 토큰에서 사용자 ID 추출
+        String usersId = jwtTokenProvider.getUserIdFromToken(token);
+
+        // DB에서 사용자 조회 (서비스에 findById 추가)
+        User user = userService.findById(usersId);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("error", "유효하지 않은 사용자입니다."));
+        }
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("id", user.getId());
+        body.put("username", user.getUsername());
+        body.put("nickname", user.getNickname());
+        body.put("email", user.getEmail());
+        body.put("role", user.getRole());
+        body.put("url", user.getProfileUrl() != null ? user.getProfileUrl() : "");
+        body.put("provider", user.getProvider() != null ? user.getProvider() : "credentials");
+
+        return ResponseEntity.ok(body);
+    }
 
     // 리프레시 토큰으로 Access 토큰 재발급
     @PostMapping("/refresh-token")
     public ResponseEntity<?> refreshAccessToken(HttpServletRequest request) {
         String refreshToken = null;
 
-        // 1️⃣ 쿠키에서 refreshToken 찾기
         if (request.getCookies() != null) {
             for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
                 if ("refreshToken".equals(cookie.getName())) {
@@ -115,27 +139,43 @@ public class UserController {
             }
         }
 
-        // 2️⃣ 토큰이 없으면 거부
         if (refreshToken == null || !jwtTokenProvider.validateToken(refreshToken)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("유효하지 않은 리프레시 토큰");
         }
 
-        // 3️⃣ 토큰에서 userId 추출
         String users_id = jwtTokenProvider.getUserIdFromToken(refreshToken);
-
-        // 4️⃣ 저장된 토큰과 비교
         String savedToken = jwtTokenProvider.findByUserId(users_id);
         if (savedToken == null || !refreshToken.equals(savedToken)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("저장된 토큰과 일치하지 않음");
         }
 
-        // 5️⃣ AccessToken 새로 발급
         String newAccessToken = jwtTokenProvider.generateToken(users_id);
+        String newRefreshToken = jwtTokenProvider.generateRefreshToken(users_id);
 
-        // 6️⃣ 응답
-        return ResponseEntity.ok(Collections.singletonMap("accessToken", newAccessToken));
+        jwtTokenProvider.save(users_id, newRefreshToken);
+
+        // ✅ 개발환경용 쿠키 옵션 조정
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", newAccessToken)
+                .httpOnly(true)
+                .secure(false)            // ★ 변경
+                .path("/")
+                .maxAge(60 * 60 * 12)
+                .sameSite("Lax")          // ★ 변경
+                .build();
+
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", newRefreshToken)
+                .httpOnly(true)
+                .secure(false)            // ★ 변경
+                .path("/")
+                .maxAge(60 * 60 * 24 * 7)
+                .sameSite("Lax")          // ★ 변경
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .body(Collections.singletonMap("accessToken", newAccessToken));
     }
-
 }

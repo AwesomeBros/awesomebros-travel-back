@@ -67,7 +67,7 @@
             (SELECT COUNT(*) FROM comments WHERE posts_id = #{posts_id})
             )
         ON DUPLICATE KEY UPDATE
-            like_count = VALUES(like_count),z
+            like_count = VALUES(like_count),
             view_count = VALUES(view_count),
             comment_count = VALUES(comment_count)
     </insert>
@@ -144,11 +144,11 @@
     </update>
 
     <!-- ✅ 조회수 증가 -->
-    <update id="updateViewCount" parameterType="int">
-        UPDATE posts
-        SET view_count = view_count + 1
-        WHERE id = #{id}
-    </update>
+<!--    <update id="updateViewCount" parameterType="int">-->
+<!--        UPDATE posts-->
+<!--        SET view_count = view_count + 1-->
+<!--        WHERE id = #{id}-->
+<!--    </update>-->
 
     <!-- ✅ 위치 일관성 체크 -->
     <select id="checkLocationValidity" resultType="int">

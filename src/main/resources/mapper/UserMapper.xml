@@ -18,6 +18,11 @@
         WHERE username = #{username}
     </select>
 
+    <select id="findById" parameterType="String" resultType="com.trip_gg.user.User">
+        SELECT * FROM users
+        WHERE id = #{id}
+    </select>
+
     <select id="existsByUsername" resultType="boolean" parameterType="string">
         SELECT COUNT(*) > 0 FROM users WHERE username = #{username}
     </select>

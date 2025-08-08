@@ -161,9 +161,9 @@ public class PostService {
         return postMapper.getAllPosts();
     }
 
-    public void increaseViewCount(int id) {
-        postMapper.updateViewCount(id);
-    }
+//    public void increaseViewCount(int id) {
+//        postMapper.updateViewCount(id);
+//    }
 
     public PostResponseDto getPostById(int id, String users_id) {
         Post post = postMapper.getPostById(id);

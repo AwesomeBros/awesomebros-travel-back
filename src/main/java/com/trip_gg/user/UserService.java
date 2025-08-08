@@ -34,6 +34,10 @@ public class UserService {
         return userMapper.findByUsername(username);
     }
 
+    public User findById(String username) {
+        return userMapper.findById(username);
+    }
+
     // 로그인 검증 메서드
     public boolean checkLogin(String originPassword, String encodedPassword) {
         return passwordEncoder.matches(originPassword, encodedPassword);
