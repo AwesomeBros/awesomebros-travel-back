@@ -86,7 +86,7 @@ public class PostController {
                 : null;
 
         // 조회수 증가
-//        postService.increaseViewCount(id);
+        postService.increaseViewCount(id);
 
         PostResponseDto post = postService.getPostById(id, users_id);
         return ResponseEntity.ok(post);

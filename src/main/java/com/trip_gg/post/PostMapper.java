@@ -19,7 +19,6 @@ public interface PostMapper {
     void update(Post post);
     void upsertCounts(@Param("posts_id") int posts_id);
 
-//    void updateViewCount(int id);
 
     int checkLocationValidity(@Param("countries_id") Long countries_id,
                               @Param("cities_id") Long cities_id,

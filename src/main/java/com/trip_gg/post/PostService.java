@@ -128,6 +128,11 @@ public class PostService {
         }
     }
 
+    @Transactional
+    public void increaseViewCount(int postId) {
+        countMapper.upsertOnView(postId);
+    }
+
     public List<PostResponseDto> getSortedPosts(String sort, String users_id) {
         // 1. 게시물 목록 가져오기 (정렬은 DB 쿼리에서)
         List<Post> posts = sort.equals("popular")
@@ -161,9 +166,7 @@ public class PostService {
         return postMapper.getAllPosts();
     }
 
-//    public void increaseViewCount(int id) {
-//        postMapper.updateViewCount(id);
-//    }
+
 
     public PostResponseDto getPostById(int id, String users_id) {
         Post post = postMapper.getPostById(id);

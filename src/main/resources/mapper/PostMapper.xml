@@ -144,11 +144,7 @@
     </update>
 
     <!-- ✅ 조회수 증가 -->
-<!--    <update id="updateViewCount" parameterType="int">-->
-<!--        UPDATE posts-->
-<!--        SET view_count = view_count + 1-->
-<!--        WHERE id = #{id}-->
-<!--    </update>-->
+
 
     <!-- ✅ 위치 일관성 체크 -->
     <select id="checkLocationValidity" resultType="int">

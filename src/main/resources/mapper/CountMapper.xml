@@ -18,5 +18,10 @@
         WHERE posts_id = #{posts_id}
     </select>
 
-
+    <insert id="upsertOnView" parameterType="int">
+        INSERT INTO counts (posts_id, like_count, view_count, comment_count)
+        VALUES (#{posts_id}, 0, 1, 0)
+            ON DUPLICATE KEY UPDATE
+                                 view_count = view_count + 1
+    </insert>
 </mapper>
