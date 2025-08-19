@@ -1,9 +1,6 @@
 package com.trip_gg.post;
 
-import com.trip_gg.post.Post;
-import com.trip_gg.post.PostRequestDto;
-import com.trip_gg.post.PostResponseDto;
-import com.trip_gg.post.PostService;
+import com.trip_gg.common.Pagination;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -40,7 +37,7 @@ public class PostController {
             String clientIp = request.getRemoteAddr();
             System.out.println("📌 클라이언트 IP: " + clientIp);
 
-            postService.createPost(postRequestDto);
+            postService.createPost(postRequestDto, request);
             return ResponseEntity.ok("글 작성 완료");
         } catch (IllegalAccessException exception) {
             exception.printStackTrace();
@@ -64,11 +61,11 @@ public class PostController {
         return postService.getSortedPosts(sort, users_id);
     }
 
-    @GetMapping("/cities")
-    public List<PostResponseDto> getPostsByCity(@RequestParam("city") String city,
-                                                HttpServletRequest request) {
-        return postService.getPostsByCity(city);
-    }
+//    @GetMapping("/cities")
+//    public List<PostResponseDto> getPostsByCity(@RequestParam("city") String city,
+//                                                HttpServletRequest request) {
+//        return postService.getPostsByCity(city);
+//    }
 
     @GetMapping("/all")
     public List<Post> getPostList(Model model, HttpServletRequest request) {
@@ -105,11 +102,42 @@ public class PostController {
 
             postRequestDto.setUsers_id(users_id);
 
-            postService.update(id, postRequestDto);
+            postService.update(id, postRequestDto, request);
             return ResponseEntity.ok("수정 완료");
         } catch (IOException | IllegalAccessException e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError().body("수정 중 오류 발생: " + e.getMessage());
         }
+    }
+
+//    @GetMapping("/search")
+//    public ResponseEntity<List<PostResponseDto>> search(
+//            @RequestParam(required = false) Integer countries_id,
+//            @RequestParam(required = false) Integer cities_id,
+//            @RequestParam(required = false) Integer districts_id,
+//            HttpServletRequest request
+//    ) {
+//        List<PostResponseDto> result = postService.searchPosts(countries_id, cities_id, districts_id);
+//        return ResponseEntity.ok(result);
+//    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Pagination<PostResponseDto>> searchPaged(
+            @RequestParam(required = false) Integer countries_id,
+            @RequestParam(required = false) Integer cities_id,
+            @RequestParam(required = false) Integer districts_id,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(postService.searchPostsPaged(countries_id, cities_id, districts_id, page, size));
+    }
+
+    @GetMapping("/cities-paged")
+    public ResponseEntity<Pagination<PostResponseDto>> getCityPaged(
+            @RequestParam String city,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(postService.getPostsByCityPaged(city, page, size));
     }
 }

@@ -19,9 +19,11 @@ public interface PostMapper {
     void update(Post post);
     void upsertCounts(@Param("posts_id") int posts_id);
 
-
     int checkLocationValidity(@Param("countries_id") Long countries_id,
                               @Param("cities_id") Long cities_id,
                               @Param("districts_id") Long districts_id);
 
+    List<Post> findPostsByLocation(@Param("countries_id") Integer countries_id,
+                                   @Param("cities_id") Integer cities_id,
+                                   @Param("districts_id") Integer districts_id);
 }

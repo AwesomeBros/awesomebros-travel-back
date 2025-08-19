@@ -8,5 +8,5 @@ import org.apache.ibatis.annotations.Param;
 public interface CountMapper {
     Count getCountByPostId(int posts_id);
 
-    void upsertOnView(@Param("posts_id") int postsId);
+    void upsertOnView(@Param("posts_id") int posts_id);
 }

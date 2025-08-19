@@ -1,6 +1,7 @@
 package com.trip_gg.post;
 
 import com.trip_gg.comment.Comment;
+import com.trip_gg.common.Pagination;
 import com.trip_gg.count.Count;
 import com.trip_gg.like.LikeMapper;
 import com.trip_gg.location.Location;
@@ -9,12 +10,18 @@ import com.trip_gg.count.CountResponseDto;
 import com.trip_gg.location.LocationDto;
 import com.trip_gg.count.CountMapper;
 import com.trip_gg.location.LocationMapper;
+import jakarta.servlet.http.HttpServletRequest;
+// import jakarta.servlet.http.HttpServletResponse; // ❌ 미사용 임포트 제거  // ✅ 변경
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+// import lombok.Value; // ❌ 잘못된 임포트 (롬복 Value 아님)          // ✅ 변경
+import org.springframework.beans.factory.annotation.Value;                 // ✅ 변경
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.*;                                                   // ✅ 변경 (Files.move 사용)
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -30,8 +37,15 @@ public class PostService {
     private final CountMapper countMapper;
     private final LikeMapper likeMapper;
 
+    @Value("${file.upload.root}")
+    private String uploadRoot;               // e.g. /home/gyubuntu/project/media/trip_gg_uploads
+
+    @Value("${file.upload.public-path:/uploads}")
+    private String publicPathPrefix;         // e.g. /uploads
+
     @Transactional
-    public void createPost(PostRequestDto postRequestDto) throws IllegalAccessException, IOException {
+    public void createPost(PostRequestDto postRequestDto, HttpServletRequest request)
+            throws IllegalAccessException, IOException {
         Post post = postRequestDto.toPost();
         post.setCreated_at(LocalDateTime.now());
 
@@ -47,12 +61,12 @@ public class PostService {
         postMapper.upsertCounts(post.getId());
 
         String originUrl = postRequestDto.getUrl();
-        String serverUrl = "http://localhost:8080";
-        String finalUrl = null;
+        String relativeUrl = null;
 
         if (originUrl != null && originUrl.contains("/temp/")) {
-            finalUrl = moveFileFromTemp(originUrl, post.getId());
-            post.setUrl(serverUrl + finalUrl);
+            relativeUrl = moveFileFromTempToImages(originUrl, post.getId());
+            String baseUrl = buildBaseUrl(request);
+            post.setUrl(baseUrl + relativeUrl);
         }
 
         postMapper.update(post);
@@ -65,7 +79,8 @@ public class PostService {
     }
 
     @Transactional
-    public void update(int id, PostRequestDto postRequestDto) throws IOException, IllegalAccessException {
+    public void update(int id, PostRequestDto postRequestDto, HttpServletRequest request)
+            throws IOException, IllegalAccessException {
         Post post = postRequestDto.toPost();
         post.setId(id);
 
@@ -76,12 +91,12 @@ public class PostService {
         }
 
         String originUrl = postRequestDto.getUrl();
-        String serverUrl = "http://localhost:8080";
-        String finalUrl = null;
+        String relativeUrl = null;
 
         if (originUrl != null && originUrl.contains("/temp/")) {
-            finalUrl = moveFileFromTemp(originUrl, id);
-            post.setUrl(serverUrl + finalUrl);
+            relativeUrl = moveFileFromTempToImages(originUrl, id);
+            String baseUrl = buildBaseUrl(request);
+            post.setUrl(baseUrl + relativeUrl);
         } else {
             post.setUrl(originUrl);
         }
@@ -98,75 +113,77 @@ public class PostService {
         }
     }
 
+    /**
+     * temp 경로의 파일을 서버 저장소(images/{postId}/)로 이동시키고,
+     * 브라우저에서 접근 가능한 상대경로(/uploads/images/{postId}/{fileName})를 반환합니다.
+     */
     @Transactional
-    private String moveFileFromTemp(String tempUrl, int posts_id) throws IOException {
-        if (tempUrl == null) {
-            throw new IOException("파일 경로가 null입니다.");
-        }
+    private String moveFileFromTempToImages(String tempUrl, int posts_id) throws IOException {
+        if (tempUrl == null) throw new IOException("파일 경로가 null입니다.");
 
         String fileName = tempUrl.substring(tempUrl.lastIndexOf("/") + 1);
-        String tempPath = System.getProperty("user.dir") + "/uploads/temp/" + fileName;
 
-        // 최종 경로
-        String destDirPath = System.getProperty("user.dir") + "/uploads/final/" + posts_id;
-        String destPath = destDirPath + "/" + fileName;
+        // 실제 파일시스템 경로
+        Path tempPath = Paths.get(uploadRoot, "temp", fileName);                 // ✅ 변경
+        Path destDir = Paths.get(uploadRoot, "images", String.valueOf(posts_id));// ✅ 변경
+        Path destPath = destDir.resolve(fileName);                                // ✅ 변경
 
-        File tempFile = new File(tempPath);
-        File destDir = new File(destDirPath);
-        File destFile = new File(destPath);
-
-        if (!tempFile.exists()) {
+        if (!Files.exists(tempPath)) {
             throw new IOException("임시 파일이 존재하지 않습니다: " + tempPath);
         }
-
-        if (!destDir.exists()) destDir.mkdirs();
-
-        if (tempFile.renameTo(destFile)) {
-            return "/uploads/final/" + posts_id + "/" + fileName;
-        } else {
-            throw new IOException("파일 이동 실패");
+        if (!Files.exists(destDir)) {
+            Files.createDirectories(destDir);                                     // ✅ 변경
         }
+
+        // renameTo 대신 Files.move 사용 (다른 파일시스템/권한에서도 안정적)   // ✅ 변경
+        try {
+            Files.move(tempPath, destPath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException ex) {
+            throw new IOException("파일 이동 실패: " + tempPath + " → " + destPath, ex);
+        }
+
+        return publicPathPrefix + "/images/" + posts_id + "/" + fileName;
     }
 
+    // 요청으로부터 베이스 URL을 생성 (scheme://host[:port])
+    private String buildBaseUrl(HttpServletRequest request) {
+        return ServletUriComponentsBuilder.fromRequestUri(request)
+                .replacePath(null)
+                .build()
+                .toUriString();
+    }
+
+    // 조회수 증가
     @Transactional
     public void increaseViewCount(int postId) {
         countMapper.upsertOnView(postId);
     }
 
     public List<PostResponseDto> getSortedPosts(String sort, String users_id) {
-        // 1. 게시물 목록 가져오기 (정렬은 DB 쿼리에서)
         List<Post> posts = sort.equals("popular")
                 ? postMapper.findPopularPosts()
                 : postMapper.findLatestPosts();
 
-        // 2. 게시물 ID 목록 추천
-        List<Integer> postList = posts.stream()
-                .map(Post::getId)
-                .toList();
+        List<Integer> postList = posts.stream().map(Post::getId).toList();
 
-        // 3. 좋아요한 게시물 ID 목록 가져오기
         Set<Integer> likedPostSet = (users_id != null)
                 ? new HashSet<>(likeMapper.findLikedPostList(postList, users_id))
                 : new HashSet<>();
 
-        // 4. DTO 변환 (liked 여부 포함)
         return posts.stream()
                 .map(post -> PostResponseDto.from(post, likedPostSet.contains(post.getId())))
                 .collect(Collectors.toList());
     }
 
-
-    public List<PostResponseDto> getPostsByCity(String city) {
-        return postMapper.getPostsByCity(city).stream()
-                .map(PostResponseDto::from)
-                .collect(Collectors.toList());
-    }
+//    public List<PostResponseDto> getPostsByCity(String city) {
+//        return postMapper.getPostsByCity(city).stream()
+//                .map(PostResponseDto::from)
+//                .collect(Collectors.toList());
+//    }
 
     public List<Post> getAllPosts() {
         return postMapper.getAllPosts();
     }
-
-
 
     public PostResponseDto getPostById(int id, String users_id) {
         Post post = postMapper.getPostById(id);
@@ -183,12 +200,63 @@ public class PostService {
 
         Count count = countMapper.getCountByPostId(id);
         List<CountResponseDto> counts = (count != null)
-                ?List.of(CountResponseDto.from(count))
-                :List.of();
+                ? List.of(CountResponseDto.from(count))
+                : List.of();
 
-            boolean liked = (users_id != null && likeMapper.isLiked(id, users_id) != null); // ✅ 좋아요 여부 체크
-
-            return PostResponseDto.from(post, locations, comments, counts, liked); // ✅ liked 값 포함
+        boolean liked = (users_id != null && likeMapper.isLiked(id, users_id) != null);
+        return PostResponseDto.from(post, locations, comments, counts, liked);
     }
 
+//    public List<PostResponseDto> searchPosts(Integer countries_id,
+//                                             Integer cities_id,
+//                                             Integer districts_id) {
+//        List<Post> posts = postMapper.findPostsByLocation(countries_id, cities_id, districts_id);
+//
+//        return posts.stream()
+//                .map(PostResponseDto::from)
+//                .collect(Collectors.toList());
+//    }
+
+    // 검색 결과 조회 (페이지네이션 적용)
+    public Pagination<PostResponseDto> searchPostsPaged(Integer countries_id,
+                                                          Integer cities_id,
+                                                          Integer districts_id,
+                                                          int page,
+                                                          int size) {
+        List<PostResponseDto> all = postMapper.findPostsByLocation(countries_id, cities_id, districts_id).stream()
+                .map(PostResponseDto::from)
+                .toList();
+        return paginate(all, page, size);
+    }
+
+    // 도시별 후기 조회 (페이지네이션 적용)
+    public Pagination<PostResponseDto> getPostsByCityPaged(String city, int page, int size) {
+        List<PostResponseDto> all = postMapper.getPostsByCity(city).stream()
+                .map(PostResponseDto::from)
+                .toList();
+        return paginate(all, page, size);
+    }
+
+    /**
+     * 공통 페이지네이션 메서드
+     *
+     * @param all  전체 데이터 리스트
+     * @param page 요청 페이지 (1부터 시작)
+     * @param size 페이지 크기
+     */
+    private <T> Pagination<T> paginate(List<T> all, int page, int size) {
+        int total = all.size();
+        int fromIndex = Math.min((page - 1) * size, total);
+        int toIndex = Math.min(fromIndex + size, total);
+
+        List<T> content = all.subList(fromIndex, toIndex);
+
+        return Pagination.<T>builder()
+                .content(content)
+                .page(page)
+                .size(size)
+                .totalElements(total)
+                .totalPages((int) Math.ceil((double) total / size))
+                .build();
+    }
 }

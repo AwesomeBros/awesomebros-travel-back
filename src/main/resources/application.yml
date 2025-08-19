@@ -1,12 +1,17 @@
 jwt:
   secret: mySuperSecretJwtKey1234567890!@#
 
+server:
+  # ✅ Nginx 프록시 뒤에서 Host/Proto 헤더를 신뢰하여 절대 URL 생성 정확도 향상
+  forward-headers-strategy: framework
+
 spring:
   datasource:
     url: ${DB_URL}?allowPublicKeyRetrieval=true&useSSL=false
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.mariadb.jdbc.Driver
+    # ❌ (삭제) static-locations 는 datasource 아래에 두는 설정이 아닙니다
 
   redis:
     host: ${DB_IP}
@@ -17,7 +22,11 @@ spring:
 
   web:
     resources:
-      static-locations: classpath:/static/, file:uploads/
+      # ✅ 정적 리소스 경로를 절대 경로로 지정 (Nginx 없이도 테스트 가능)
+      #    Nginx가 /uploads/ 를 직접 서빙하므로 운영에선 없어도 되지만, 백엔드 단독 테스트에 유용
+      static-locations: |
+        classpath:/static/,
+        file:/home/gyubuntu/project/media/trip_gg_uploads/   # ✅ 절대 경로
 
   servlet:
     multipart:
@@ -32,14 +41,16 @@ mybatis:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
 
-# 파일 업로드 디렉토리 설정 (프로젝트 루트의 uploads 폴더)
+# ✅ 파일 업로드 디렉토리 커스텀 설정 (서비스에서 주입받아 사용)
 file:
-  upload-dir: uploads
+  upload:
+    root: /home/gyubuntu/project/media/trip_gg_uploads   # ✅ 서버 실제 저장 경로 (images, temp 하위 폴더)
+    public-path: /uploads                                 # ✅ 브라우저 접근 URL 프리픽스 (Nginx에서 alias)
 
 # 디버깅용 로그 설정
 logging:
   level:
     org.springframework.web: DEBUG
     com.trip_gg: DEBUG
-    com.trip_gg.controller: INFO  # 컨트롤러 로그만
-    com.trip_gg.service: INFO     # 서비스 로그만
+    com.trip_gg.controller: INFO
+    com.trip_gg.service: INFO

@@ -143,9 +143,6 @@
         WHERE id = #{id}
     </update>
 
-    <!-- ✅ 조회수 증가 -->
-
-
     <!-- ✅ 위치 일관성 체크 -->
     <select id="checkLocationValidity" resultType="int">
         SELECT COUNT(*)
@@ -156,4 +153,32 @@
           AND c.id = #{cities_id}
           AND d.id = #{districts_id}
     </select>
+
+    <!-- 선택적 필터(국가/도시/지역) -->
+    <select id="findPostsByLocation" resultMap="PostResultMap">
+        SELECT p.*
+        FROM posts p
+        <where>
+            <if test="countries_id != null">
+                p.countries_id = #{countries_id}
+            </if>
+            <if test="cities_id != null">
+                <if test="countries_id != null">AND</if>
+                p.cities_id = #{cities_id}
+            </if>
+            <if test="districts_id != null">
+                <if test="countries_id != null or cities_id != null">AND</if>
+                p.districts_id = #{districts_id}
+            </if>
+        </where>
+<!--        <choose>-->
+<!--            <when test="sort != null and sort == 'popular'">-->
+<!--                ORDER BY p.view_count DESC-->
+<!--            </when>-->
+<!--            <otherwise>-->
+<!--                ORDER BY p.created_at DESC-->
+<!--            </otherwise>-->
+<!--        </choose>-->
+    </select>
+
 </mapper>
