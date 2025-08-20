@@ -22,4 +22,6 @@ public interface CommentMapper {
 
     // counts 테이블의 comment_count 증가
     void increaseCommentCount(@Param("posts_id") int posts_id);
+
+    List<Comment> findCommentsByUserId(@Param("users_id") String users_id);
 }

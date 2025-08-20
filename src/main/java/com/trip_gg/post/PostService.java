@@ -1,6 +1,7 @@
 package com.trip_gg.post;
 
 import com.trip_gg.comment.Comment;
+import com.trip_gg.comment.CommentMapper;
 import com.trip_gg.common.Pagination;
 import com.trip_gg.count.Count;
 import com.trip_gg.like.LikeMapper;
@@ -36,6 +37,7 @@ public class PostService {
     private final LocationMapper locationMapper;
     private final CountMapper countMapper;
     private final LikeMapper likeMapper;
+    private final CommentMapper commentMapper;
 
     @Value("${file.upload.root}")
     private String uploadRoot;               // e.g. /home/gyubuntu/project/media/trip_gg_uploads
@@ -256,5 +258,36 @@ public class PostService {
                 .totalElements(total)
                 .totalPages((int) Math.ceil((double) total / size))
                 .build();
+    }
+
+    /**
+     * 특정 사용자가 작성한 게시글 목록 조회
+     */
+    public List<PostResponseDto> getPostsByUserId(String users_id) {
+        List<Post> posts = postMapper.findPostsByUserId(users_id);
+
+        // ✅ 여기서 DTO로 변환 (기존 로직 유지)
+        return posts.stream()
+                .map(post -> PostResponseDto.builder()
+                        .id(post.getId())
+                        .title(post.getTitle())
+                        .content(post.getContent())
+                        .users_id(post.getUsers_id())
+                        .created_at(post.getCreated_at())
+                        .url(post.getUrl())
+                        .build())
+                .toList();
+    }
+
+    /** 내가 좋아요한 게시글 목록 */
+    public List<PostResponseDto> getLikedPostsByUserId(String users_id) {
+        List<Post> posts = postMapper.findLikedPostsByUserId(users_id);
+        return posts.stream().map(PostResponseDto::from).toList();
+    }
+
+    /** 내가 단 댓글 목록 (최신순) */
+    public List<CommentResponseDto> getMyComments(String users_id) {
+        List<Comment> list = commentMapper.findCommentsByUserId(users_id);
+        return list.stream().map(CommentResponseDto::from).toList();
     }
 }

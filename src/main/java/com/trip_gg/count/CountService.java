@@ -24,10 +24,10 @@ public class CountService {
                     .build();
         }
 
-        // ✅ 각 필드 값도 개별 확인
-        System.out.println("like_count = " + count.getLike_count());
-        System.out.println("view_count = " + count.getView_count());
-        System.out.println("comment_count = " + count.getComment_count());
+//        // ✅ 각 필드 값도 개별 확인
+//        System.out.println("like_count = " + count.getLike_count());
+//        System.out.println("view_count = " + count.getView_count());
+//        System.out.println("comment_count = " + count.getComment_count());
 
         return CountResponseDto.from(count);
     }

@@ -35,7 +35,7 @@ public class PostController {
 
             // 📌 필요 시 요청 정보 사용 가능
             String clientIp = request.getRemoteAddr();
-            System.out.println("📌 클라이언트 IP: " + clientIp);
+//            System.out.println("📌 클라이언트 IP: " + clientIp);
 
             postService.createPost(postRequestDto, request);
             return ResponseEntity.ok("글 작성 완료");
@@ -75,7 +75,7 @@ public class PostController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PostResponseDto> getPostById(@PathVariable int id,
+    public ResponseEntity<PostResponseDto> getPostById(@PathVariable("id") int id,
                                                        HttpServletRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String users_id = (authentication != null && authentication.isAuthenticated())
@@ -94,7 +94,7 @@ public class PostController {
        =========================== */
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> update(@RequestBody PostRequestDto postRequestDto,
-                                         @PathVariable int id,
+                                         @PathVariable("id") int id,
                                          HttpServletRequest request) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

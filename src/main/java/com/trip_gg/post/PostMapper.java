@@ -10,11 +10,13 @@ import java.util.List;
 
 @Mapper
 public interface PostMapper {
+
     void insertPost(Post post);
     List<Post> findLatestPosts();
     List<Post> findPopularPosts();
     List<Post> getPostsByCity(String city);
     List<Post> getAllPosts();
+
     Post getPostById(int id);
     void update(Post post);
     void upsertCounts(@Param("posts_id") int posts_id);
@@ -26,4 +28,9 @@ public interface PostMapper {
     List<Post> findPostsByLocation(@Param("country") String country,
                                    @Param("city") String city,
                                    @Param("district") String district);
+
+    // 내가 쓴 게시글
+    List<Post> findPostsByUserId(@Param("users_id") String users_id);
+    // 좋아요 한 게시글
+    List<Post> findLikedPostsByUserId(@Param("users_id") String users_id);
 }

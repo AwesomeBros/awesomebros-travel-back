@@ -48,4 +48,10 @@
         SELECT COUNT(*) FROM comments WHERE posts_id = #{posts_id}
     </select>
 
+    <select id="findCommentsByUserId" parameterType="string" resultMap="CommentResultMap">
+        SELECT c.*
+        FROM comments c
+        WHERE c.users_id = #{users_id}
+        ORDER BY c.created_at DESC
+    </select>
 </mapper>

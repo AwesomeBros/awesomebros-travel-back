@@ -182,4 +182,22 @@
         </where>
         ORDER BY p.created_at DESC
     </select>
+
+    <!-- 내가 쓴 게시글 목록 조회 -->
+    <select id="findPostsByUserId" parameterType="string" resultMap="PostResultMap">
+        SELECT
+        p.*
+        FROM posts p
+        LEFT JOIN users u ON p.users_id = u.id
+        WHERE p.users_id = #{users_id}
+        ORDER BY p.created_at DESC
+    </select>
+
+    <select id="findLikedPostsByUserId" parameterType="string" resultMap="PostResultMap">
+        SELECT p.*
+        FROM posts p
+                 INNER JOIN likes l ON l.posts_id = p.id
+        WHERE l.users_id = #{users_id}
+        ORDER BY p.created_at DESC
+    </select>
 </mapper>

@@ -2,7 +2,10 @@
 
 package com.trip_gg.user;
 
+import com.trip_gg.comment.CommentResponseDto;
 import com.trip_gg.jwt.JwtTokenProvider;
+import com.trip_gg.post.PostResponseDto;
+import com.trip_gg.post.PostService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -23,6 +27,7 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final PostService postService;
     private final JwtTokenProvider jwtTokenProvider;
 
     // 회원가입
@@ -39,61 +44,7 @@ public class UserController {
         return ResponseEntity.ok("회원가입 성공");
     }
 
-    // 로그인
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UserRequestDto dto, HttpServletResponse response) {
-        try {
-            User storedUser = userService.findByUsername(dto.getUsername());
-            if (storedUser == null || !userService.checkLogin(dto.getPassword(), storedUser.getPassword())) {
-                return ResponseEntity.status(401).body("아이디 또는 비밀번호가 잘못되었습니다");
-            }
-
-            // 토큰 발급
-            String accessToken = jwtTokenProvider.generateToken(storedUser.getId());
-            String refreshToken = jwtTokenProvider.generateRefreshToken(storedUser.getId());
-
-            // RefreshToken 저장 (메모리/Redis/DB)
-            jwtTokenProvider.save(storedUser.getId(), refreshToken);
-
-            // ✅ 개발환경용 쿠키 옵션 조정
-            ResponseCookie accessCookie = ResponseCookie.from("accessToken", accessToken)
-                    .httpOnly(true)
-                    .secure(false)            // ★ 변경: 로컬 HTTP에서 쿠키 전송되도록
-                    .path("/")
-                    .maxAge(60 * 60 * 12)
-                    .sameSite("Lax")          // ★ 변경: 엄격 모드 → Lax
-                    .build();
-
-            ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
-                    .httpOnly(true)
-                    .secure(false)            // ★ 변경
-                    .path("/")
-                    .maxAge(60 * 60 * 24 * 7)
-                    .sameSite("Lax")          // ★ 변경
-                    .build();
-
-            response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
-            response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
-
-            // 사용자 정보만 응답
-            Map<String, Object> user = new HashMap<>();
-            user.put("id", storedUser.getId());
-            user.put("nickname", storedUser.getNickname());
-            user.put("username", storedUser.getUsername());
-            user.put("email", storedUser.getEmail());
-            user.put("role", storedUser.getRole());
-            user.put("url", storedUser.getProfileUrl() != null ? storedUser.getProfileUrl() : "");
-            user.put("provider", storedUser.getProvider() != null ? storedUser.getProvider() : "credentials");
-
-            return ResponseEntity.ok(user);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 내부 오류");
-        }
-    }
-
-    // ✅ 프로필 조회(인증 필요): 프론트가 바로 호출하는 엔드포인트
+    // 프로필 조회(인증 필요): 프론트가 바로 호출하는 엔드포인트
     @GetMapping("/profile")
     public ResponseEntity<?> profile(HttpServletRequest request) {
         // 쿠키/헤더에서 토큰 추출
@@ -104,10 +55,10 @@ public class UserController {
         }
 
         // 토큰에서 사용자 ID 추출
-        String usersId = jwtTokenProvider.getUserIdFromToken(token);
+        String users_id = jwtTokenProvider.getUserIdFromToken(token);
 
         // DB에서 사용자 조회 (서비스에 findById 추가)
-        User user = userService.findById(usersId);
+        User user = userService.findById(users_id);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Collections.singletonMap("error", "유효하지 않은 사용자입니다."));
@@ -125,57 +76,72 @@ public class UserController {
         return ResponseEntity.ok(body);
     }
 
-    // 리프레시 토큰으로 Access 토큰 재발급
-    @PostMapping("/refresh-token")
-    public ResponseEntity<?> refreshAccessToken(HttpServletRequest request) {
-        String refreshToken = null;
-
-        if (request.getCookies() != null) {
-            for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
-                if ("refreshToken".equals(cookie.getName())) {
-                    refreshToken = cookie.getValue();
-                    break;
-                }
+    @GetMapping("/my-posts")
+    public ResponseEntity<?> getMyPosts(HttpServletRequest request) {
+        try {
+            // 토큰에서 사용자 ID 추출
+            String token = jwtTokenProvider.resolveToken(request);
+            if (token == null || !jwtTokenProvider.validateToken(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Collections.singletonMap("error", "인증이 필요합니다."));
             }
+
+            String users_id = jwtTokenProvider.getUserIdFromToken(token);
+
+            // 해당 사용자가 작성한 게시글 조회
+            List<PostResponseDto> myPosts = postService.getPostsByUserId(users_id);
+
+            return ResponseEntity.ok(myPosts);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "서버 내부 오류"));
         }
+    }
 
-        if (refreshToken == null || !jwtTokenProvider.validateToken(refreshToken)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("유효하지 않은 리프레시 토큰");
+    @GetMapping("/liked-posts")
+    public ResponseEntity<?> getLikedPosts(HttpServletRequest request) {
+        try {
+            String token = jwtTokenProvider.resolveToken(request);
+            if (token == null || !jwtTokenProvider.validateToken(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Collections.singletonMap("error", "인증이 필요합니다."));
+            }
+            String users_id = jwtTokenProvider.getUserIdFromToken(token);
+
+            // ✅ 좋아요한 게시글 목록 조회
+            List<PostResponseDto> liked = postService.getLikedPostsByUserId(users_id);
+            return ResponseEntity.ok(liked);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "서버 내부 오류"));
         }
+    }
 
-        String users_id = jwtTokenProvider.getUserIdFromToken(refreshToken);
-        String savedToken = jwtTokenProvider.findByUserId(users_id);
-        if (savedToken == null || !refreshToken.equals(savedToken)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("저장된 토큰과 일치하지 않음");
+    /**
+     * 내가 단 댓글 목록
+     */
+    @GetMapping("/my-comments")
+    public ResponseEntity<?> getMyComments(HttpServletRequest request) {
+        try {
+            String token = jwtTokenProvider.resolveToken(request);
+            if (token == null || !jwtTokenProvider.validateToken(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Collections.singletonMap("error", "인증이 필요합니다."));
+            }
+            String users_id = jwtTokenProvider.getUserIdFromToken(token);
+
+            // ✅ 내가 단 댓글 목록 조회 (최신순)
+            List<CommentResponseDto> comments = postService.getMyComments(users_id);
+            return ResponseEntity.ok(comments);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "서버 내부 오류"));
         }
-
-        String newAccessToken = jwtTokenProvider.generateToken(users_id);
-        String newRefreshToken = jwtTokenProvider.generateRefreshToken(users_id);
-
-        jwtTokenProvider.save(users_id, newRefreshToken);
-
-        // ✅ 개발환경용 쿠키 옵션 조정
-        ResponseCookie accessCookie = ResponseCookie.from("accessToken", newAccessToken)
-                .httpOnly(true)
-                .secure(false)            // ★ 변경
-                .path("/")
-                .maxAge(60 * 60 * 12)
-                .sameSite("Lax")          // ★ 변경
-                .build();
-
-        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", newRefreshToken)
-                .httpOnly(true)
-                .secure(false)            // ★ 변경
-                .path("/")
-                .maxAge(60 * 60 * 24 * 7)
-                .sameSite("Lax")          // ★ 변경
-                .build();
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(Collections.singletonMap("accessToken", newAccessToken));
     }
 }
