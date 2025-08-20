@@ -152,33 +152,34 @@
         WHERE co.id = #{countries_id}
           AND c.id = #{cities_id}
           AND d.id = #{districts_id}
+
     </select>
 
-    <!-- 선택적 필터(국가/도시/지역) -->
+    <!-- ✅ 선택적 필터(국가/도시/지역 이름)로 게시글 조회
+         - country / city / district 중 일부만 전달되어도 동작
+         - OGNL test에는 '컬럼'이 아닌 '파라미터 변수명'을 사용해야 함 -->
     <select id="findPostsByLocation" resultMap="PostResultMap">
         SELECT p.*
         FROM posts p
+        JOIN countries co ON p.countries_id = co.id
+        JOIN cities    ci ON p.cities_id    = ci.id
+        JOIN districts di ON p.districts_id = di.id
         <where>
-            <if test="countries_id != null">
-                p.countries_id = #{countries_id}
+            <!-- 국가명 조건 (파라미터: country) -->
+            <if test="country != null and country != ''">
+                AND co.name = #{country}
             </if>
-            <if test="cities_id != null">
-                <if test="countries_id != null">AND</if>
-                p.cities_id = #{cities_id}
+
+            <!-- 도시명 조건 (파라미터: city) -->
+            <if test="city != null and city != ''">
+                AND ci.name = #{city}
             </if>
-            <if test="districts_id != null">
-                <if test="countries_id != null or cities_id != null">AND</if>
-                p.districts_id = #{districts_id}
+
+            <!-- 지역명 조건 (파라미터: district) -->
+            <if test="district != null and district != ''">
+                AND di.name = #{district}
             </if>
         </where>
-<!--        <choose>-->
-<!--            <when test="sort != null and sort == 'popular'">-->
-<!--                ORDER BY p.view_count DESC-->
-<!--            </when>-->
-<!--            <otherwise>-->
-<!--                ORDER BY p.created_at DESC-->
-<!--            </otherwise>-->
-<!--        </choose>-->
+        ORDER BY p.created_at DESC
     </select>
-
 </mapper>

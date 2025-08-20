@@ -175,11 +175,11 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
-//    public List<PostResponseDto> getPostsByCity(String city) {
-//        return postMapper.getPostsByCity(city).stream()
-//                .map(PostResponseDto::from)
-//                .collect(Collectors.toList());
-//    }
+    public List<PostResponseDto> getPostsByCity(String city) {
+        return postMapper.getPostsByCity(city).stream()
+                .map(PostResponseDto::from)
+                .collect(Collectors.toList());
+    }
 
     public List<Post> getAllPosts() {
         return postMapper.getAllPosts();
@@ -217,25 +217,23 @@ public class PostService {
 //                .collect(Collectors.toList());
 //    }
 
-    // 검색 결과 조회 (페이지네이션 적용)
-    public Pagination<PostResponseDto> searchPostsPaged(Integer countries_id,
-                                                          Integer cities_id,
-                                                          Integer districts_id,
-                                                          int page,
-                                                          int size) {
-        List<PostResponseDto> all = postMapper.findPostsByLocation(countries_id, cities_id, districts_id).stream()
-                .map(PostResponseDto::from)
+    // ✅ 국가/도시/지역 이름 기반 검색 (페이지네이션은 자바단 공통 메서드 사용 가정)
+    public List<PostResponseDto> searchByNames(String country,
+                                               String city,
+                                               String district) {
+        return postMapper.findPostsByLocation(country, city, district)
+                .stream()
+                .map(PostResponseDto::from) // ✅ users_id/liked/view_count 제외 버전 사용
                 .toList();
-        return paginate(all, page, size);
     }
 
-    // 도시별 후기 조회 (페이지네이션 적용)
-    public Pagination<PostResponseDto> getPostsByCityPaged(String city, int page, int size) {
-        List<PostResponseDto> all = postMapper.getPostsByCity(city).stream()
-                .map(PostResponseDto::from)
-                .toList();
-        return paginate(all, page, size);
-    }
+//    // 도시별 후기 조회 (페이지네이션 적용)
+//    public Pagination<PostResponseDto> getPostsByCityPaged(String city, int page, int size) {
+//        List<PostResponseDto> all = postMapper.getPostsByCity(city).stream()
+//                .map(PostResponseDto::from)
+//                .toList();
+//        return paginate(all, page, size);
+//    }
 
     /**
      * 공통 페이지네이션 메서드
@@ -244,7 +242,7 @@ public class PostService {
      * @param page 요청 페이지 (1부터 시작)
      * @param size 페이지 크기
      */
-    private <T> Pagination<T> paginate(List<T> all, int page, int size) {
+    <T> Pagination<T> paginate(List<T> all, int page, int size) {
         int total = all.size();
         int fromIndex = Math.min((page - 1) * size, total);
         int toIndex = Math.min(fromIndex + size, total);

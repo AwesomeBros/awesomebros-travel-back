@@ -23,7 +23,7 @@ public interface PostMapper {
                               @Param("cities_id") Long cities_id,
                               @Param("districts_id") Long districts_id);
 
-    List<Post> findPostsByLocation(@Param("countries_id") Integer countries_id,
-                                   @Param("cities_id") Integer cities_id,
-                                   @Param("districts_id") Integer districts_id);
+    List<Post> findPostsByLocation(@Param("country") String country,
+                                   @Param("city") String city,
+                                   @Param("district") String district);
 }

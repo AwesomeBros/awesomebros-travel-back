@@ -129,4 +129,23 @@ public class JwtTokenProvider {
     public String findByUserId(String users_id) {
         return refreshTokenStore.get(users_id);
     }
+
+    // RefreshToken 삭제(로그아웃 시)
+    public void delete(String users_id) {
+        if (users_id != null) {
+            refreshTokenStore.remove(users_id);
+        }
+    }
+
+    // 쿠키에서 refreshToken 추출 유틸(컨트롤러/필터에서 재사용 가능)
+    public String resolveRefreshToken(HttpServletRequest request) {
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("refreshToken".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
+    }
 }

@@ -61,11 +61,11 @@ public class PostController {
         return postService.getSortedPosts(sort, users_id);
     }
 
-//    @GetMapping("/cities")
-//    public List<PostResponseDto> getPostsByCity(@RequestParam("city") String city,
-//                                                HttpServletRequest request) {
-//        return postService.getPostsByCity(city);
-//    }
+    @GetMapping("/cities")
+    public List<PostResponseDto> getPostsByCity(@RequestParam("city") String city,
+                                                HttpServletRequest request) {
+        return postService.getPostsByCity(city);
+    }
 
     @GetMapping("/all")
     public List<Post> getPostList(Model model, HttpServletRequest request) {
@@ -122,22 +122,23 @@ public class PostController {
 //    }
 
     @GetMapping("/search")
-    public ResponseEntity<Pagination<PostResponseDto>> searchPaged(
-            @RequestParam(required = false) Integer countries_id,
-            @RequestParam(required = false) Integer cities_id,
-            @RequestParam(required = false) Integer districts_id,
+    public ResponseEntity<Pagination<PostResponseDto>> searchByNames(
+            @RequestParam(required = false) String country,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String district,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return ResponseEntity.ok(postService.searchPostsPaged(countries_id, cities_id, districts_id, page, size));
+        List<PostResponseDto> all = postService.searchByNames(country, city, district);
+        return ResponseEntity.ok(postService.paginate(all, page, size));
     }
 
-    @GetMapping("/cities-paged")
-    public ResponseEntity<Pagination<PostResponseDto>> getCityPaged(
-            @RequestParam String city,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        return ResponseEntity.ok(postService.getPostsByCityPaged(city, page, size));
-    }
+//    @GetMapping("/cities-paged")
+//    public ResponseEntity<Pagination<PostResponseDto>> getCityPaged(
+//            @RequestParam String city,
+//            @RequestParam(defaultValue = "1") int page,
+//            @RequestParam(defaultValue = "10") int size
+//    ) {
+//        return ResponseEntity.ok(postService.getPostsByCityPaged(city, page, size));
+//    }
 }
