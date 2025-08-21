@@ -26,6 +26,7 @@ import java.nio.file.*;                                                   // ✅
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -261,12 +262,12 @@ public class PostService {
     }
 
     /**
-     * 특정 사용자가 작성한 게시글 목록 조회
+     *  내가 작성한 게시글 목록 조회
      */
     public List<PostResponseDto> getPostsByUserId(String users_id) {
         List<Post> posts = postMapper.findPostsByUserId(users_id);
 
-        // ✅ 여기서 DTO로 변환 (기존 로직 유지)
+        // 여기서 DTO로 변환 (기존 로직 유지)
         return posts.stream()
                 .map(post -> PostResponseDto.builder()
                         .id(post.getId())
@@ -278,6 +279,65 @@ public class PostService {
                         .build())
                 .toList();
     }
+
+    /** 내가 쓴 게시글 수정(소유자 검증 포함) */
+    @Transactional
+    public void updatePostByOwner(String users_id, int posts_id, PostRequestDto dto) throws IllegalAccessException, IOException {
+        Post existing = postMapper.getPostById(posts_id);
+        if (existing == null) throw new IllegalAccessException("게시글이 존재하지 않습니다.");
+        if (!Objects.equals(existing.getUsers_id(), users_id)) {
+            throw new IllegalAccessException("본인 게시글만 수정할 수 있습니다.");
+        }
+
+        Post toUpdate = dto.toPost();
+        toUpdate.setId(posts_id);
+        toUpdate.setUsers_id(users_id);
+
+        int isValid = postMapper.checkLocationValidity(
+                toUpdate.getCountries_id(), toUpdate.getCities_id(), toUpdate.getDistricts_id());
+        if (isValid == 0) throw new IllegalAccessException("국가/도시/지역 선택이 잘못되었습니다.");
+
+        // 이미지가 /temp 에 있으면 최종 경로로 이동 (요청객체가 없으니 절대URL 저장은 생략/유지)
+        String originUrl = dto.getUrl();
+        if (originUrl != null && originUrl.contains("/temp/")) {
+            String relativeUrl = moveFileFromTempToImages(originUrl, posts_id);
+            // 기존 URL 형식 유지: 상대경로만 저장하거나, 기존 absolute 형식이면 그대로 두세요.
+            toUpdate.setUrl(relativeUrl);
+        } else {
+            toUpdate.setUrl(originUrl);
+        }
+
+        postMapper.update(toUpdate);
+
+        // 위치 갱신
+        locationMapper.deleteLocationByPostId(posts_id);
+        for (Location loc : dto.toLocation(posts_id)) {
+            loc.setPosts_id(posts_id);
+            locationMapper.insertLocation(loc);
+        }
+
+        postMapper.upsertCounts(posts_id);
+    }
+
+    /** 내가 쓴 게시글 삭제(소유자 검증 포함) *//*
+    @Transactional
+    public void deletePostByOwner(String users_id, int posts_id) throws IllegalAccessException {
+        Post existing = postMapper.getPostById(posts_id);
+        if (existing == null) return;
+        if (!Objects.equals(existing.getUsers_id(), users_id)) {
+            throw new IllegalAccessException("본인 게시글만 삭제할 수 있습니다.");
+        }
+
+        // 연관 데이터 정리 (댓글/좋아요/위치/카운트)
+        commentMapper.deleteByPostId(posts_id);     // ✅ Mapper 필요
+        likeMapper.deleteAllByPostId(posts_id);     // ✅ Mapper 필요
+        locationMapper.deleteLocationByPostId(posts_id);
+        countMapper.deleteByPostId(posts_id);       // ✅ Mapper 필요
+
+        postMapper.deleteById(posts_id);            // ✅ Mapper 필요
+        // (원하면 업로드 이미지 파일 삭제도 추가 가능)
+    }*/
+
 
     /** 내가 좋아요한 게시글 목록 */
     public List<PostResponseDto> getLikedPostsByUserId(String users_id) {

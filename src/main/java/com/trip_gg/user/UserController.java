@@ -1,18 +1,14 @@
-// 파일: src/main/java/com/trip_gg/user/UserController.java   // [Controller 파일]
-
 package com.trip_gg.user;
 
 import com.trip_gg.comment.CommentResponseDto;
 import com.trip_gg.jwt.JwtTokenProvider;
+import com.trip_gg.post.PostRequestDto;
 import com.trip_gg.post.PostResponseDto;
 import com.trip_gg.post.PostService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,10 +26,11 @@ public class UserController {
     private final PostService postService;
     private final JwtTokenProvider jwtTokenProvider;
 
-    // 회원가입
+    /**
+     * 회원가입
+     */
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody @Valid UserRequestDto dto) {
-        // 중복 체크
         if (userService.existsByUsername(dto.getUsername())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("이미 사용중인 아이디입니다.");
         }
@@ -44,20 +41,18 @@ public class UserController {
         return ResponseEntity.ok("회원가입 성공");
     }
 
-    // 프로필 조회(인증 필요): 프론트가 바로 호출하는 엔드포인트
+    /**
+     * 프로필 조회 (JWT 인증 필요)
+     */
     @GetMapping("/profile")
     public ResponseEntity<?> profile(HttpServletRequest request) {
-        // 쿠키/헤더에서 토큰 추출
         String token = jwtTokenProvider.resolveToken(request);
         if (token == null || !jwtTokenProvider.validateToken(token)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Collections.singletonMap("error", "인증이 필요합니다."));
         }
 
-        // 토큰에서 사용자 ID 추출
         String users_id = jwtTokenProvider.getUserIdFromToken(token);
-
-        // DB에서 사용자 조회 (서비스에 findById 추가)
         User user = userService.findById(users_id);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -76,72 +71,131 @@ public class UserController {
         return ResponseEntity.ok(body);
     }
 
+    // -----------------------------------------------------------
+    // 📌 내가 쓴 게시글 (my-posts)
+    // -----------------------------------------------------------
+
+    // 조회
     @GetMapping("/my-posts")
     public ResponseEntity<?> getMyPosts(HttpServletRequest request) {
         try {
-            // 토큰에서 사용자 ID 추출
-            String token = jwtTokenProvider.resolveToken(request);
-            if (token == null || !jwtTokenProvider.validateToken(token)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Collections.singletonMap("error", "인증이 필요합니다."));
-            }
-
-            String users_id = jwtTokenProvider.getUserIdFromToken(token);
-
-            // 해당 사용자가 작성한 게시글 조회
+            String users_id = validateAndGetUserId(request);
             List<PostResponseDto> myPosts = postService.getPostsByUserId(users_id);
-
             return ResponseEntity.ok(myPosts);
-
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("error", e.getMessage()));
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Collections.singletonMap("error", "서버 내부 오류"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", "서버 내부 오류"));
         }
     }
+
+    // 수정
+    @PutMapping("/my-posts/{id}")
+    public ResponseEntity<?> updateMyPost(@PathVariable int id,
+                                          @RequestBody @Valid PostRequestDto dto,
+                                          HttpServletRequest request) {
+        try {
+            String users_id = validateAndGetUserId(request);
+            postService.updatePostByOwner(users_id, id, dto);
+            return ResponseEntity.ok(Collections.singletonMap("message", "수정 완료"));
+        } catch (IllegalAccessException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", "서버 내부 오류"));
+        }
+    }
+
+    /*// 삭제
+    @DeleteMapping("/my-posts/{id}")
+    public ResponseEntity<?> deleteMyPost(@PathVariable int id, HttpServletRequest request) {
+        try {
+            String users_id = validateAndGetUserId(request);
+            postService.deletePostByOwner(users_id, id);
+            return ResponseEntity.ok(Collections.singletonMap("message", "삭제 완료"));
+        } catch (IllegalAccessException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", "서버 내부 오류"));
+        }
+    }*/
+
+    // -----------------------------------------------------------
+    // 📌 좋아요 한 게시글 (liked-posts)
+    // -----------------------------------------------------------
 
     @GetMapping("/liked-posts")
     public ResponseEntity<?> getLikedPosts(HttpServletRequest request) {
         try {
-            String token = jwtTokenProvider.resolveToken(request);
-            if (token == null || !jwtTokenProvider.validateToken(token)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Collections.singletonMap("error", "인증이 필요합니다."));
-            }
-            String users_id = jwtTokenProvider.getUserIdFromToken(token);
-
-            // ✅ 좋아요한 게시글 목록 조회
+            String users_id = validateAndGetUserId(request);
             List<PostResponseDto> liked = postService.getLikedPostsByUserId(users_id);
             return ResponseEntity.ok(liked);
-
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("error", e.getMessage()));
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Collections.singletonMap("error", "서버 내부 오류"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", "서버 내부 오류"));
         }
     }
 
-    /**
-     * 내가 단 댓글 목록
-     */
+    // -----------------------------------------------------------
+    // 📌 내가 단 댓글 (my-comments)
+    // -----------------------------------------------------------
+
+    // 조회
     @GetMapping("/my-comments")
     public ResponseEntity<?> getMyComments(HttpServletRequest request) {
         try {
-            String token = jwtTokenProvider.resolveToken(request);
-            if (token == null || !jwtTokenProvider.validateToken(token)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Collections.singletonMap("error", "인증이 필요합니다."));
-            }
-            String users_id = jwtTokenProvider.getUserIdFromToken(token);
-
-            // ✅ 내가 단 댓글 목록 조회 (최신순)
+            String users_id = validateAndGetUserId(request);
             List<CommentResponseDto> comments = postService.getMyComments(users_id);
             return ResponseEntity.ok(comments);
-
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("error", e.getMessage()));
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Collections.singletonMap("error", "서버 내부 오류"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", "서버 내부 오류"));
         }
+    }
+
+//    // 수정
+//    @PutMapping("/my-comments/{comments_id}")
+//    public ResponseEntity<?> updateMyComment(@PathVariable int comments_id,
+//                                             @RequestBody Map<String, String> body,
+//                                             HttpServletRequest request) {
+//        try {
+//            String users_id = validateAndGetUserId(request);
+//            String content = body.getOrDefault("content", "").trim();
+//            if (content.isEmpty()) {
+//                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "content는 비어 있을 수 없습니다."));
+//            }
+//            postService.updateMyComment(users_id, comments_id, content);
+//            return ResponseEntity.ok(Collections.singletonMap("message", "댓글 수정 완료"));
+//        } catch (IllegalAccessException e) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", e.getMessage()));
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", "서버 내부 오류"));
+//        }
+//    }
+//
+//    // 삭제
+//    @DeleteMapping("/my-comments/{comments_id}")
+//    public ResponseEntity<?> deleteMyComment(@PathVariable int comments_id, HttpServletRequest request) {
+//        try {
+//            String users_id = validateAndGetUserId(request);
+//            postService.deleteMyComment(users_id, comments_id);
+//            return ResponseEntity.ok(Collections.singletonMap("message", "댓글 삭제 완료"));
+//        } catch (IllegalAccessException e) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", e.getMessage()));
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", "서버 내부 오류"));
+//        }
+//    }
+
+    // -----------------------------------------------------------
+    // 📌 내부 유틸 메서드 (JWT 검증 및 사용자 ID 추출)
+    // -----------------------------------------------------------
+    private String validateAndGetUserId(HttpServletRequest request) {
+        String token = jwtTokenProvider.resolveToken(request);
+        if (token == null || !jwtTokenProvider.validateToken(token)) {
+            throw new SecurityException("인증이 필요합니다.");
+        }
+        return jwtTokenProvider.getUserIdFromToken(token);
     }
 }

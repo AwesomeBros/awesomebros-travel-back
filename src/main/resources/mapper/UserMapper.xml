@@ -13,7 +13,7 @@
 
     <!-- 사용자 조회 (로그인용) -->
     <select id="findByUsername" parameterType="String" resultType="com.trip_gg.user.User">
-        SELECT id, username, password, email, role, created_at
+        SELECT id, username, password, email, role, created_at, nickname, provider, url
         FROM users
         WHERE username = #{username}
     </select>
