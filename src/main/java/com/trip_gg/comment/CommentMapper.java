@@ -24,4 +24,7 @@ public interface CommentMapper {
     void increaseCommentCount(@Param("posts_id") int posts_id);
 
     List<Comment> findCommentsByUserId(@Param("users_id") String users_id);
+
+    int updateCommentById(@Param("id") int id,
+                          @Param("content") String content);
 }

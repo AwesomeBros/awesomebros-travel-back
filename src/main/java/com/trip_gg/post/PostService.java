@@ -2,27 +2,28 @@ package com.trip_gg.post;
 
 import com.trip_gg.comment.Comment;
 import com.trip_gg.comment.CommentMapper;
+import com.trip_gg.comment.CommentRequestDto;
+import com.trip_gg.comment.CommentResponseDto;
 import com.trip_gg.common.Pagination;
 import com.trip_gg.count.Count;
+import com.trip_gg.count.CountMapper;
+import com.trip_gg.count.CountResponseDto;
 import com.trip_gg.like.LikeMapper;
 import com.trip_gg.location.Location;
-import com.trip_gg.comment.CommentResponseDto;
-import com.trip_gg.count.CountResponseDto;
 import com.trip_gg.location.LocationDto;
-import com.trip_gg.count.CountMapper;
 import com.trip_gg.location.LocationMapper;
 import jakarta.servlet.http.HttpServletRequest;
-// import jakarta.servlet.http.HttpServletResponse; // ❌ 미사용 임포트 제거  // ✅ 변경
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-// import lombok.Value; // ❌ 잘못된 임포트 (롬복 Value 아님)          // ✅ 변경
-import org.springframework.beans.factory.annotation.Value;                 // ✅ 변경
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.*;                                                   // ✅ 변경 (Files.move 사용)
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -238,46 +239,28 @@ public class PostService {
 //        return paginate(all, page, size);
 //    }
 
-    /**
-     * 공통 페이지네이션 메서드
-     *
-     * @param all  전체 데이터 리스트
-     * @param page 요청 페이지 (1부터 시작)
-     * @param size 페이지 크기
-     */
-    <T> Pagination<T> paginate(List<T> all, int page, int size) {
-        int total = all.size();
-        int fromIndex = Math.min((page - 1) * size, total);
-        int toIndex = Math.min(fromIndex + size, total);
-
-        List<T> content = all.subList(fromIndex, toIndex);
-
-        return Pagination.<T>builder()
-                .content(content)
-                .page(page)
-                .size(size)
-                .totalElements(total)
-                .totalPages((int) Math.ceil((double) total / size))
-                .build();
-    }
 
     /**
      *  내가 작성한 게시글 목록 조회
      */
-    public List<PostResponseDto> getPostsByUserId(String users_id) {
+    public Pagination<PostResponseDto> getPostsByUserId(String users_id, int page, int size) {  // ✅ 변경
+        // 1) 전체 조회 (DB 레벨 페이징 필요하면 Mapper에 LIMIT/OFFSET 쿼리 추가로 교체 가능)
         List<Post> posts = postMapper.findPostsByUserId(users_id);
 
-        // 여기서 DTO로 변환 (기존 로직 유지)
-        return posts.stream()
-                .map(post -> PostResponseDto.builder()
-                        .id(post.getId())
-                        .title(post.getTitle())
-                        .content(post.getContent())
-                        .users_id(post.getUsers_id())
-                        .created_at(post.getCreated_at())
-                        .url(post.getUrl())
+        // 2) DTO 변환
+        List<PostResponseDto> allDtos = posts.stream()
+                .map(p -> PostResponseDto.builder()
+                        .id(p.getId())
+                        .title(p.getTitle())
+                        .content(p.getContent())
+                        .users_id(p.getUsers_id())
+                        .created_at(p.getCreated_at())
+                        .url(p.getUrl())
                         .build())
                 .toList();
+
+        // 3) 자바단 페이지네이션 (공용 메서드 사용)
+        return paginate(allDtos, page, size);
     }
 
     /** 내가 쓴 게시글 수정(소유자 검증 포함) */
@@ -340,14 +323,50 @@ public class PostService {
 
 
     /** 내가 좋아요한 게시글 목록 */
-    public List<PostResponseDto> getLikedPostsByUserId(String users_id) {
+    public Pagination<PostResponseDto> getLikedPostsByUserId(String users_id, int page, int size) {
         List<Post> posts = postMapper.findLikedPostsByUserId(users_id);
-        return posts.stream().map(PostResponseDto::from).toList();
+        List<PostResponseDto> allDtos = posts.stream().map(PostResponseDto::from).toList();
+//        return posts.stream().map(PostResponseDto::from).toList();
+        return paginate(allDtos, page, size);
     }
 
-    /** 내가 단 댓글 목록 (최신순) */
-    public List<CommentResponseDto> getMyComments(String users_id) {
-        List<Comment> list = commentMapper.findCommentsByUserId(users_id);
-        return list.stream().map(CommentResponseDto::from).toList();
+
+    /** 내가 단 댓글 목록  */
+    // 조회(최신순)
+    public Pagination<CommentResponseDto> getMyComments(String users_id, int page, int size) {
+        List<Comment> comments = commentMapper.findCommentsByUserId(users_id);
+        List<CommentResponseDto> allDtos = comments.stream().map(CommentResponseDto::from).toList();
+        return paginate(allDtos, page, size);
     }
+
+    // 수정
+    public void updateCommentContentOnly(int commentsId, String content) {
+        commentMapper.updateCommentById(commentsId, content);
+    }
+
+
+
+    /**
+     * 공통 페이지네이션 메서드
+     *
+     * @param all  전체 데이터 리스트
+     * @param page 요청 페이지 (1부터 시작)
+     * @param size 페이지 크기
+     */
+    <T> Pagination<T> paginate(List<T> all, int page, int size) {
+        int total = all.size();
+        int fromIndex = Math.min((page - 1) * size, total);
+        int toIndex = Math.min(fromIndex + size, total);
+
+        List<T> content = all.subList(fromIndex, toIndex);
+
+        return Pagination.<T>builder()
+                .content(content)
+                .page(page)
+                .size(size)
+                .totalElements(total)
+                .totalPages((int) Math.ceil((double) total / size))
+                .build();
+    }
+
 }

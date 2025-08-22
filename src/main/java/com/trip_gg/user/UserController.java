@@ -1,6 +1,8 @@
 package com.trip_gg.user;
 
+import com.trip_gg.comment.CommentRequestDto;
 import com.trip_gg.comment.CommentResponseDto;
+import com.trip_gg.common.Pagination;
 import com.trip_gg.jwt.JwtTokenProvider;
 import com.trip_gg.post.PostRequestDto;
 import com.trip_gg.post.PostResponseDto;
@@ -77,10 +79,12 @@ public class UserController {
 
     // 조회
     @GetMapping("/my-posts")
-    public ResponseEntity<?> getMyPosts(HttpServletRequest request) {
+    public ResponseEntity<?> getMyPosts(HttpServletRequest request,
+                                        @RequestParam(defaultValue = "1") int page,
+                                        @RequestParam(defaultValue = "10") int size) {
         try {
             String users_id = validateAndGetUserId(request);
-            List<PostResponseDto> myPosts = postService.getPostsByUserId(users_id);
+            Pagination<PostResponseDto> myPosts = postService.getPostsByUserId(users_id, page, size);
             return ResponseEntity.ok(myPosts);
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("error", e.getMessage()));
@@ -124,10 +128,13 @@ public class UserController {
     // -----------------------------------------------------------
 
     @GetMapping("/liked-posts")
-    public ResponseEntity<?> getLikedPosts(HttpServletRequest request) {
+    public ResponseEntity<?> getLikedPosts(HttpServletRequest request,
+                                           @RequestParam(defaultValue = "1") int page,
+                                           @RequestParam(defaultValue = "10") int size
+                                           ) {
         try {
             String users_id = validateAndGetUserId(request);
-            List<PostResponseDto> liked = postService.getLikedPostsByUserId(users_id);
+            Pagination<PostResponseDto> liked = postService.getLikedPostsByUserId(users_id, page, size);
             return ResponseEntity.ok(liked);
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("error", e.getMessage()));
@@ -142,10 +149,12 @@ public class UserController {
 
     // 조회
     @GetMapping("/my-comments")
-    public ResponseEntity<?> getMyComments(HttpServletRequest request) {
+    public ResponseEntity<?> getMyComments(HttpServletRequest request,
+                                           @RequestParam(defaultValue = "1") int page,
+                                           @RequestParam(defaultValue = "10") int size) {
         try {
             String users_id = validateAndGetUserId(request);
-            List<CommentResponseDto> comments = postService.getMyComments(users_id);
+            Pagination<CommentResponseDto> comments = postService.getMyComments(users_id, page, size);
             return ResponseEntity.ok(comments);
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("error", e.getMessage()));
@@ -154,26 +163,28 @@ public class UserController {
         }
     }
 
-//    // 수정
-//    @PutMapping("/my-comments/{comments_id}")
-//    public ResponseEntity<?> updateMyComment(@PathVariable int comments_id,
-//                                             @RequestBody Map<String, String> body,
-//                                             HttpServletRequest request) {
-//        try {
-//            String users_id = validateAndGetUserId(request);
-//            String content = body.getOrDefault("content", "").trim();
-//            if (content.isEmpty()) {
-//                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "content는 비어 있을 수 없습니다."));
-//            }
-//            postService.updateMyComment(users_id, comments_id, content);
-//            return ResponseEntity.ok(Collections.singletonMap("message", "댓글 수정 완료"));
-//        } catch (IllegalAccessException e) {
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Collections.singletonMap("error", e.getMessage()));
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", "서버 내부 오류"));
-//        }
-//    }
-//
+    // 수정
+    @PutMapping("/my-comments/{comments_id}")
+    public ResponseEntity<?> updateMyCommentSimple(@PathVariable int comments_id,
+                                                   @RequestBody @Valid CommentRequestDto dto) {
+        try {
+            // 내용 검증(비어있음 방지)만 간단히 수행
+            String content = dto.getContent().trim();
+            if (content.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(Collections.singletonMap("error", "content는 비어 있을 수 없습니다."));
+            }
+
+            postService.updateCommentContentOnly(comments_id, content);
+
+            return ResponseEntity.ok(Collections.singletonMap("message", "댓글 수정 완료"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "서버 내부 오류"));
+        }
+    }
+
 //    // 삭제
 //    @DeleteMapping("/my-comments/{comments_id}")
 //    public ResponseEntity<?> deleteMyComment(@PathVariable int comments_id, HttpServletRequest request) {

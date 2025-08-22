@@ -1,4 +1,4 @@
-package com.trip_gg.auth; // 파일종류: Controller (로그아웃 전용)
+package com.trip_gg.auth;
 
 import com.trip_gg.jwt.JwtTokenProvider;
 import com.trip_gg.user.User;

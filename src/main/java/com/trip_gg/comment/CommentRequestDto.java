@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class CommentRequestDto {
 
+    private int id;
     private String content;
     private int posts_id;
 

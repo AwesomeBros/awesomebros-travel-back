@@ -28,7 +28,7 @@
         <result property="nickname" column="nickname"/>
     </resultMap>
 
-    <!-- ✅ 게시글별 댓글 조회 -->
+    <!-- 게시글별 댓글 조회 -->
     <select id="findCommentsByPostId" resultMap="CommentResultMap">
         SELECT
             c.id,
@@ -42,6 +42,13 @@
         WHERE c.posts_id = #{posts_id}
         ORDER BY c.id DESC
     </select>
+
+    <!-- 댓글 수정 -->
+    <update id="updateCommentById">
+        UPDATE comments
+        SET content = #{content}
+        WHERE id = #{id}
+    </update>
 
     <!-- ✅ 댓글 개수 조회 -->
     <select id="countCommentsByPostId" resultType="int">
