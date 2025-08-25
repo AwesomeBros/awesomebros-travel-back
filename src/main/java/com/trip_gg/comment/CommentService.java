@@ -56,4 +56,13 @@ public class CommentService {
     public int countComments(int posts_id) {
         return commentMapper.countCommentsByPostId(posts_id);
     }
+
+    @Transactional
+    public void deleteMyComment(String users_id, int comments_id) throws IllegalAccessException {
+        int affected = commentMapper.deleteMyComment(comments_id, users_id); // id/users_id/is_deleted=0 조건
+        if (affected == 0) {
+            throw new IllegalAccessException("본인 댓글이 아니거나 존재하지 않습니다.");
+        }
+    }
+
 }

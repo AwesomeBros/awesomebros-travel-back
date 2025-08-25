@@ -40,14 +40,16 @@
         FROM comments c
                  JOIN users u ON c.users_id = u.id
         WHERE c.posts_id = #{posts_id}
+        AND c.is_deleted = 0
         ORDER BY c.id DESC
     </select>
 
     <!-- 댓글 수정 -->
-    <update id="updateCommentById">
+    <update id="updateMyComment">
         UPDATE comments
         SET content = #{content}
         WHERE id = #{id}
+          AND users_id = #{users_id}
     </update>
 
     <!-- ✅ 댓글 개수 조회 -->
@@ -56,9 +58,18 @@
     </select>
 
     <select id="findCommentsByUserId" parameterType="string" resultMap="CommentResultMap">
-        SELECT c.*
-        FROM comments c
-        WHERE c.users_id = #{users_id}
-        ORDER BY c.created_at DESC
+        SELECT *
+        FROM comments
+        WHERE users_id = #{users_id}
+        AND is_deleted = 0
+        ORDER BY created_at DESC
     </select>
+
+    <update id="deleteMyComment">
+        UPDATE comments
+            SET is_deleted = 1
+        WHERE id = #{id}
+        AND users_id = #{users_id}
+        AND is_deleted = 0
+    </update>
 </mapper>

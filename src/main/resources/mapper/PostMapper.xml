@@ -13,6 +13,7 @@
         <result property="users_id" column="users_id" />
         <result property="slug" column="slug" />
         <result property="url" column="url" />
+        <result property="post_writer_nickname" column="post_nickname" />
 <!--        <result property="view_count" column="view_count" />-->
         <result property="countries_id" column="countries_id" />
         <result property="cities_id" column="cities_id" />
@@ -72,7 +73,7 @@
             comment_count = VALUES(comment_count)
     </insert>
 
-
+    <!-- 매인페이지 게시글 최신 / 인기 -->
     <!-- ✅ 최신 게시글 8개 -->
     <select id="findLatestPosts" resultMap="PostResultMap">
         SELECT p.*
@@ -83,11 +84,15 @@
             LIMIT 8
     </select>
 
-
     <!-- ✅ 인기 게시글 8개 -->
     <select id="findPopularPosts" resultMap="PostResultMap">
-        SELECT * FROM posts ORDER BY view_count DESC LIMIT 8
+        select * from posts p
+            left join counts c on p.id = c.posts_id
+            order by c.like_count desc
+            limit 8
     </select>
+
+
 
     <!-- ✅ 특정 도시 게시글 -->
     <select id="getPostsByCity" parameterType="String" resultMap="PostResultMap">
@@ -103,7 +108,7 @@
         SELECT * FROM posts ORDER BY created_at DESC
     </select>
 
-    <!-- ✅ 게시글 상세 (댓글+위치 포함) -->
+    <!-- ✅ 게시글 단일 조회 (댓글+위치회포함) -->
     <select id="getPostById" parameterType="int" resultMap="PostWithCommentAndLocationResultMap">
         SELECT
             p.id, p.title, p.content, p.users_id, p.slug, p.url,
@@ -124,14 +129,18 @@
             l.lat AS location_lat,
             l.lng AS location_lng,
             l.created_at AS location_created_at,
-            l.posts_id AS location_posts_id
+            l.posts_id AS location_posts_id,
+
+            pu.nickname AS post_nickname
 
         FROM posts p
                  LEFT JOIN comments c ON p.id = c.posts_id
                  LEFT JOIN users u ON c.users_id = u.id
                  LEFT JOIN locations l ON p.id = l.posts_id
                  LEFT JOIN counts co ON p.id = co.posts_id
+                 LEFT JOIN users     pu ON p.users_id = pu.id
         WHERE p.id = #{id}
+        AND is_deleted = 0
     </select>
 
     <!-- ✅ 게시글 수정 -->
@@ -190,6 +199,7 @@
         FROM posts p
         LEFT JOIN users u ON p.users_id = u.id
         WHERE p.users_id = #{users_id}
+            AND is_deleted = 0
         ORDER BY p.created_at DESC
     </select>
 
@@ -200,4 +210,12 @@
         WHERE l.users_id = #{users_id}
         ORDER BY p.created_at DESC
     </select>
+
+    <update id="deleteMyPost">
+        UPDATE posts
+            SET is_deleted = 1
+        WHERE id = #{posts_id}
+        AND users_id = #{users_id}
+        AND is_deleted = 0
+    </update>
 </mapper>

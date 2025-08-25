@@ -25,6 +25,10 @@ public interface CommentMapper {
 
     List<Comment> findCommentsByUserId(@Param("users_id") String users_id);
 
-    int updateCommentById(@Param("id") int id,
-                          @Param("content") String content);
+    int updateMyComment(@Param("id") int id,
+                        @Param("users_id") String usersId,
+                        @Param("content") String content);
+
+    int deleteMyComment(@Param("id") int comments_id,
+                        @Param("users_id") String users_id);
 }

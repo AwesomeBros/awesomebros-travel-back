@@ -17,6 +17,7 @@ public class Post {
     private String users_id;
     private String slug;
     private String url;
+    private String post_writer_nickname;
 
     private Long countries_id;
     private Long cities_id;

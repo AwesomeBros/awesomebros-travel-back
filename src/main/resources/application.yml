@@ -25,8 +25,7 @@ spring:
       # ✅ 정적 리소스 경로를 절대 경로로 지정 (Nginx 없이도 테스트 가능)
       #    Nginx가 /uploads/ 를 직접 서빙하므로 운영에선 없어도 되지만, 백엔드 단독 테스트에 유용
       static-locations: |
-        classpath:/static/,
-        file:/home/gyubuntu/project/media/trip_gg_uploads/   # ✅ 절대 경로
+        classpath:/static/, file:uploads/
 
   servlet:
     multipart:
@@ -44,7 +43,7 @@ mybatis:
 # ✅ 파일 업로드 디렉토리 커스텀 설정 (서비스에서 주입받아 사용)
 file:
   upload:
-    root: /home/gyubuntu/project/media/trip_gg_uploads   # ✅ 서버 실제 저장 경로 (images, temp 하위 폴더)
+    root: /uploads
     public-path: /uploads                                 # ✅ 브라우저 접근 URL 프리픽스 (Nginx에서 alias)
 
 # 디버깅용 로그 설정

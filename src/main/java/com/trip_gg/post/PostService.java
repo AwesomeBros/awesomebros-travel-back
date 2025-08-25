@@ -42,10 +42,10 @@ public class PostService {
     private final CommentMapper commentMapper;
 
     @Value("${file.upload.root}")
-    private String uploadRoot;               // e.g. /home/gyubuntu/project/media/trip_gg_uploads
+    private String uploadRoot;
 
     @Value("${file.upload.public-path:/uploads}")
-    private String publicPathPrefix;         // e.g. /uploads
+    private String publicPathPrefix;
 
     @Transactional
     public void createPost(PostRequestDto postRequestDto, HttpServletRequest request)
@@ -302,24 +302,17 @@ public class PostService {
         postMapper.upsertCounts(posts_id);
     }
 
-    /** 내가 쓴 게시글 삭제(소유자 검증 포함) *//*
-    @Transactional
-    public void deletePostByOwner(String users_id, int posts_id) throws IllegalAccessException {
-        Post existing = postMapper.getPostById(posts_id);
-        if (existing == null) return;
-        if (!Objects.equals(existing.getUsers_id(), users_id)) {
-            throw new IllegalAccessException("본인 게시글만 삭제할 수 있습니다.");
-        }
+//    // 내가 쓴 게시글 삭제
+//    @Transactional
+//    public void deleteMyPost(String users_id, int posts_id) throws IllegalAccessException {
+//        // 소유자 조건으로 업데이트 -> 영향 받은 행이 0이면 본인 글이 아님 or 이미 삭제 / 존재X
+//        int affected = postMapper.deleteMyPost(posts_id, users_id);
+//        if (affected == 0) {
+//            throw new IllegalAccessException("본인 게시글이 아니거나 존재하지 않습니다.");
+//        }
+//    }
 
-        // 연관 데이터 정리 (댓글/좋아요/위치/카운트)
-        commentMapper.deleteByPostId(posts_id);     // ✅ Mapper 필요
-        likeMapper.deleteAllByPostId(posts_id);     // ✅ Mapper 필요
-        locationMapper.deleteLocationByPostId(posts_id);
-        countMapper.deleteByPostId(posts_id);       // ✅ Mapper 필요
 
-        postMapper.deleteById(posts_id);            // ✅ Mapper 필요
-        // (원하면 업로드 이미지 파일 삭제도 추가 가능)
-    }*/
 
 
     /** 내가 좋아요한 게시글 목록 */
@@ -340,9 +333,17 @@ public class PostService {
     }
 
     // 수정
-    public void updateCommentContentOnly(int commentsId, String content) {
-        commentMapper.updateCommentById(commentsId, content);
+    @Transactional
+    public void updateMyComment(String users_id, int comments_id, String content) throws IllegalAccessException {
+        // id + users_id 조건으로 한 번에 업데이트 → 원자적으로 소유자 검증 + 수정
+        int affected = commentMapper.updateMyComment(comments_id, users_id, content); // ✅ 추가
+        if (affected == 0) {
+            // 댓글이 없거나 남의 댓글인 경우
+            throw new IllegalAccessException("존재하지 않거나 본인 댓글이 아닙니다.");
+        }
     }
+
+    // 삭제
 
 
 

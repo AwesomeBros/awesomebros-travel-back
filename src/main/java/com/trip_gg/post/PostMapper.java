@@ -33,4 +33,7 @@ public interface PostMapper {
     List<Post> findPostsByUserId(@Param("users_id") String users_id);
     // 좋아요 한 게시글
     List<Post> findLikedPostsByUserId(@Param("users_id") String users_id);
+
+    int deleteMyPost(@Param("posts_id") int posts_id,
+                     @Param("users_id") String users_id);
 }
