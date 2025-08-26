@@ -79,6 +79,8 @@
         SELECT p.*
         FROM posts p
                  LEFT JOIN likes l ON l.posts_id = p.id
+            WHERE p.is_deleted = 0
+              AND p.is_deleted = 0
         GROUP BY p.id
         ORDER BY p.created_at DESC
             LIMIT 8
@@ -88,6 +90,7 @@
     <select id="findPopularPosts" resultMap="PostResultMap">
         select * from posts p
             left join counts c on p.id = c.posts_id
+                 where p.is_deleted = 0
             order by c.like_count desc
             limit 8
     </select>
@@ -100,6 +103,7 @@
         FROM posts p
                  JOIN cities c ON p.cities_id = c.id
         WHERE c.name = #{city}
+          AND p.is_deleted = 0
         ORDER BY p.created_at DESC
     </select>
 
@@ -140,7 +144,7 @@
                  LEFT JOIN counts co ON p.id = co.posts_id
                  LEFT JOIN users     pu ON p.users_id = pu.id
         WHERE p.id = #{id}
-        AND is_deleted = 0
+        AND p.is_deleted = 0
     </select>
 
     <!-- ✅ 게시글 수정 -->
@@ -199,7 +203,7 @@
         FROM posts p
         LEFT JOIN users u ON p.users_id = u.id
         WHERE p.users_id = #{users_id}
-            AND is_deleted = 0
+            AND p.is_deleted = 0
         ORDER BY p.created_at DESC
     </select>
 
@@ -208,14 +212,16 @@
         FROM posts p
                  INNER JOIN likes l ON l.posts_id = p.id
         WHERE l.users_id = #{users_id}
+          AND p.is_deleted = 0
         ORDER BY p.created_at DESC
     </select>
 
     <update id="deleteMyPost">
         UPDATE posts
-            SET is_deleted = 1
+        SET is_deleted = 1
         WHERE id = #{posts_id}
-        AND users_id = #{users_id}
-        AND is_deleted = 0
+          AND users_id = #{users_id}
+          AND is_deleted = 0
     </update>
+
 </mapper>

@@ -302,15 +302,14 @@ public class PostService {
         postMapper.upsertCounts(posts_id);
     }
 
-//    // 내가 쓴 게시글 삭제
-//    @Transactional
-//    public void deleteMyPost(String users_id, int posts_id) throws IllegalAccessException {
-//        // 소유자 조건으로 업데이트 -> 영향 받은 행이 0이면 본인 글이 아님 or 이미 삭제 / 존재X
-//        int affected = postMapper.deleteMyPost(posts_id, users_id);
-//        if (affected == 0) {
-//            throw new IllegalAccessException("본인 게시글이 아니거나 존재하지 않습니다.");
-//        }
-//    }
+    // 내가 쓴 게시글 삭제
+    @Transactional
+    public void deleteMyPost(String users_id, int posts_id) throws IllegalAccessException {
+        int affected = postMapper.deleteMyPost(posts_id, users_id); // ⚠️ 이름 일치
+        if (affected == 0) {
+            throw new IllegalAccessException("본인 게시글이 아니거나 존재하지 않습니다.");
+        }
+    }
 
 
 

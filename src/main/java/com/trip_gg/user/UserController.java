@@ -111,23 +111,23 @@ public class UserController {
         }
     }
 
-//    // 삭제
-//    @DeleteMapping("/my-posts/{id}")
-//    public ResponseEntity<?> deleteMyPost(@PathVariable int id,
-//                                          HttpServletRequest request) {
-//        try {
-//            String users_id = validateAndGetUserId(request);
-//            postService.deleteMyPost(users_id, id);
-//            return ResponseEntity.ok(Collections.singletonMap("message", "게시글 삭제 완료"));
-//        } catch (IllegalAccessException e) {
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-//                    .body(Collections.singletonMap("error", e.getMessage()));
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body(Collections.singletonMap("error", "서버 내부 오류"));
-//        }
-//    }
+    // 삭제
+    @DeleteMapping("/my-posts/{id}")
+    public ResponseEntity<?> deleteMyPost(@PathVariable int id,
+                                          HttpServletRequest request) {
+        try {
+            String users_id = validateAndGetUserId(request);
+            postService.deleteMyPost(users_id, id);
+            return ResponseEntity.ok(Collections.singletonMap("message", "게시글 삭제 완료"));
+        } catch (IllegalAccessException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Collections.singletonMap("error", e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "서버 내부 오류"));
+        }
+    }
 
 
 
@@ -214,7 +214,7 @@ public class UserController {
         try {
             String users_id = validateAndGetUserId(request);
             commentSerivce.deleteMyComment(users_id, comments_id);
-            return ResponseEntity.ok(Collections.singletonMap("message", "댓글 삭제(숨김) 완료"));
+            return ResponseEntity.ok(Collections.singletonMap("message", "댓글 삭제 완료"));
         } catch (IllegalAccessException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Collections.singletonMap("error", e.getMessage()));
