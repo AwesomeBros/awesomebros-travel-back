@@ -16,6 +16,7 @@
         SELECT id, username, password, email, role, created_at, nickname, provider, url
         FROM users
         WHERE username = #{username}
+        AND is_deleted = 0
     </select>
 
     <select id="findById" parameterType="String" resultType="com.trip_gg.user.User">
@@ -31,4 +32,45 @@
         SELECT COUNT(*) > 0 FROM users WHERE email = #{email}
     </select>
 
+    <!-- 특정 사용자를 제외한 이메일 중복 검사 -->
+    <select id="existsByEmailExceptUser" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM users
+        WHERE email = #{email}
+          AND id != #{id}
+    </select>
+
+    <!-- 특정 사용자를 제외한 닉네임 중복 검사 -->
+    <select id="existsByNicknameExceptUser" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM users
+        WHERE nickname = #{nickname}
+          AND id != #{id}
+    </select>
+
+    <!-- 사용자 정보 업데이트 -->
+    <update id="updateById" parameterType="com.trip_gg.user.User">
+        UPDATE users
+        SET nickname = #{nickname},
+        email = #{email}
+        <if test="profileUrl != null and profileUrl != ''">
+            , profileUrl = #{profileUrl}
+        </if>
+        <if test="password != null and password != ''">
+            , password = #{password}
+        </if>
+        WHERE id = #{id}
+    </update>
+
+    <update id="updatePassword">
+        UPDATE users
+        SET password = #{password}
+        WHERE id = #{id}
+    </update>
+
+    <update id="deleteUser">
+        UPDATE users
+        SET is_deleted = 1
+        WHERE id = #{id}
+    </update>
 </mapper>

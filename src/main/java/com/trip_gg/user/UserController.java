@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -34,7 +35,7 @@ public class UserController {
      * 회원가입
      */
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody @Valid UserRequestDto dto) {
+    public ResponseEntity<String> register(@RequestBody @Validated(RegisterGroup.class) UserRequestDto dto) {
         if (userService.existsByUsername(dto.getUsername())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("이미 사용중인 아이디입니다.");
         }
@@ -130,7 +131,6 @@ public class UserController {
     }
 
 
-
     // -----------------------------------------------------------
     // 📌 좋아요 한 게시글 (liked-posts)
     // -----------------------------------------------------------
@@ -139,7 +139,7 @@ public class UserController {
     public ResponseEntity<?> getLikedPosts(HttpServletRequest request,
                                            @RequestParam(defaultValue = "1") int page,
                                            @RequestParam(defaultValue = "10") int size
-                                           ) {
+    ) {
         try {
             String users_id = validateAndGetUserId(request);
             Pagination<PostResponseDto> liked = postService.getLikedPostsByUserId(users_id, page, size);
@@ -234,5 +234,82 @@ public class UserController {
             throw new SecurityException("인증이 필요합니다..");
         }
         return jwtTokenProvider.getUserIdFromToken(token);
+    }
+
+
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(@RequestBody @Validated(ProfileUpdateGroup.class) UserRequestDto dto,
+                                           HttpServletRequest request) {
+        try {
+            // 1) 프로필 수정용 필수 필드 검증
+            if (!dto.isValidForProfileUpdate()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Collections.singletonMap("error", "이메일과 닉네임은 필수입니다."));
+            }
+
+            // 2) JWT 토큰에서 사용자 ID 추출
+            String users_id = validateAndGetUserId(request);
+
+            // 3) 서비스 호출
+            UserResponseDto updatedUser  = userService.updateProfile(users_id, dto);
+
+            // 4) 성공 응답
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "프로필 수정 완료");
+            response.put("user", updatedUser );
+
+            return ResponseEntity.ok(response);
+
+            } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Collections.singletonMap("error", e.getMessage()));
+
+        } catch (IllegalAccessException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Collections.singletonMap("error", e.getMessage()));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "서버 내부 오류"));
+        }
+    }
+
+    @PutMapping("/profile/password")
+    public ResponseEntity<?> updatePassword(@RequestBody Map<String, String> body,
+                                            HttpServletRequest request) {
+        try {
+            String users_id = validateAndGetUserId(request);
+
+            String originPassword = body.get("originPassword");
+            String newPassword = body.get("newPassword");
+
+            userService.updatePassword(users_id, originPassword, newPassword);
+
+            return ResponseEntity.ok(Collections.singletonMap("message", "비밀번호 변경 완료"));
+        } catch (IllegalAccessException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Collections.singletonMap("error", e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "서버 내부 오류"));
+        }
+    }
+
+    @DeleteMapping("/delete_id")
+    public ResponseEntity<?> deleteUser(HttpServletRequest request) {
+        try {
+            String users_id = validateAndGetUserId(request);
+            userService.deleteUser(users_id);
+            return ResponseEntity.ok(Collections.singletonMap("message", "회원 탈퇴가 완료되었습니다."));
+        } catch (IllegalAccessException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Collections.singletonMap("error", e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "서버 내부 오류"));
+        }
     }
 }

@@ -7,152 +7,162 @@
 
     <!-- ✅ 기본 Post 매핑 -->
     <resultMap id="PostResultMap" type="com.trip_gg.post.Post">
-        <id property="id" column="id" />
-        <result property="title" column="title" />
-        <result property="content" column="content" />
-        <result property="users_id" column="users_id" />
-        <result property="slug" column="slug" />
-        <result property="url" column="url" />
-        <result property="post_writer_nickname" column="post_nickname" />
-<!--        <result property="view_count" column="view_count" />-->
-        <result property="countries_id" column="countries_id" />
-        <result property="cities_id" column="cities_id" />
-        <result property="districts_id" column="districts_id" />
-        <result property="created_at" column="created_at" />
+        <id     property="id"                    column="id"/>
+        <result property="title"                 column="title"/>
+        <result property="content"               column="content"/>
+        <result property="users_id"              column="users_id"/>
+        <result property="slug"                  column="slug"/>
+        <result property="url"                   column="url"/>
+        <result property="countries_id"          column="countries_id"/>
+        <result property="cities_id"             column="cities_id"/>
+        <result property="districts_id"          column="districts_id"/>
+        <result property="created_at"            column="created_at"/>
+        <!-- ✅ 게시글 작성자 닉네임 -->
+        <result property="post_writer_nickname"  column="post_nickname"/>
     </resultMap>
 
     <!-- ✅ 댓글 + 위치 포함 Post 매핑 -->
-    <resultMap id="PostWithCommentAndLocationResultMap" type="com.trip_gg.post.Post" extends="PostResultMap">
+    <resultMap id="PostWithCommentAndLocationResultMap"
+               type="com.trip_gg.post.Post"
+               extends="PostResultMap">
 
         <!-- ✅ Comment 리스트 -->
         <collection property="comments" ofType="com.trip_gg.comment.Comment">
-            <id property="id" column="comment_id" />
-            <result property="posts_id" column="comment_posts_id"/>
-            <result property="users_id" column="comment_users_id" />
-            <result property="content" column="comment_content" />
-            <result property="created_at" column="comment_created_at" />
-            <result property="nickname" column="comment_nickname" />
+            <id     property="id"         column="comment_id"/>
+            <result property="posts_id"    column="comment_posts_id"/>
+            <result property="users_id"    column="comment_users_id"/>
+            <result property="content"     column="comment_content"/>
+            <result property="created_at"  column="comment_created_at"/>
+            <!-- 댓글 작성자 닉네임 -->
+            <result property="nickname"    column="comment_nickname"/>
         </collection>
 
         <!-- ✅ Location 리스트 -->
         <collection property="locations" ofType="com.trip_gg.location.Location">
-            <id property="id" column="location_id" />
-            <result property="name" column="location_name" />
-            <result property="lat" column="location_lat" />
-            <result property="lng" column="location_lng" />
-            <result property="created_at" column="location_created_at" />
-            <result property="posts_id" column="location_posts_id" />
+            <id     property="id"         column="location_id"/>
+            <result property="name"        column="location_name"/>
+            <result property="lat"         column="location_lat"/>
+            <result property="lng"         column="location_lng"/>
+            <result property="created_at"  column="location_created_at"/>
+            <result property="posts_id"    column="location_posts_id"/>
         </collection>
     </resultMap>
 
     <!-- ✅ 게시글 작성 -->
-    <insert id="insertPost" parameterType="com.trip_gg.post.PostRequestDto" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insertPost" parameterType="com.trip_gg.post.PostRequestDto"
+            useGeneratedKeys="true" keyProperty="id">
         INSERT INTO posts (
-            users_id, countries_id, cities_id, districts_id, title,
-            content, slug, url, created_at
+            users_id, countries_id, cities_id, districts_id,
+            title, content, slug, url, created_at
         )
         VALUES (
-                   #{users_id}, #{countries_id}, #{cities_id}, #{districts_id}, #{title},
-                   #{content}, #{slug}, #{url}, #{created_at}
+                   #{users_id}, #{countries_id}, #{cities_id}, #{districts_id},
+                   #{title}, #{content}, #{slug}, #{url}, #{created_at}
                )
     </insert>
 
-    <!-- 카운트 업데이트 -->
+    <!-- ✅ counts upsert -->
     <insert id="upsertCounts" parameterType="int">
-        INSERT INTO counts
-            (posts_id, like_count, view_count, comment_count)
-        VALUES
-            ( #{posts_id},
-            (SELECT COUNT(*) FROM likes WHERE posts_id = #{posts_id}),
-            0,
-            (SELECT COUNT(*) FROM comments WHERE posts_id = #{posts_id})
-            )
-        ON DUPLICATE KEY UPDATE
-            like_count = VALUES(like_count),
-            view_count = VALUES(view_count),
-            comment_count = VALUES(comment_count)
+        INSERT INTO counts (posts_id, like_count, view_count, comment_count)
+        VALUES (
+                   #{posts_id},
+                   (SELECT COUNT(*) FROM likes    WHERE posts_id = #{posts_id}),
+                   0,
+                   (SELECT COUNT(*) FROM comments WHERE posts_id = #{posts_id})
+               )
+            ON DUPLICATE KEY UPDATE
+                                 like_count    = VALUES(like_count),
+                                 view_count    = VALUES(view_count),
+                                 comment_count = VALUES(comment_count)
     </insert>
 
-    <!-- 매인페이지 게시글 최신 / 인기 -->
-    <!-- ✅ 최신 게시글 8개 -->
+    <!-- ✅ 최신 게시글 8개 (작성자 닉네임 포함) -->
     <select id="findLatestPosts" resultMap="PostResultMap">
-        SELECT p.*
+        SELECT p.*,
+               pu.nickname AS post_nickname
         FROM posts p
-                 LEFT JOIN likes l ON l.posts_id = p.id
-            WHERE p.is_deleted = 0
-              AND p.is_deleted = 0
-        GROUP BY p.id
+                 LEFT JOIN users pu ON p.users_id = pu.id
+        WHERE p.is_deleted = 0
         ORDER BY p.created_at DESC
             LIMIT 8
     </select>
 
-    <!-- ✅ 인기 게시글 8개 -->
+    <!-- ✅ 인기 게시글 8개 (작성자 닉네임 포함) -->
     <select id="findPopularPosts" resultMap="PostResultMap">
-        select * from posts p
-            left join counts c on p.id = c.posts_id
-                 where p.is_deleted = 0
-            order by c.like_count desc
-            limit 8
+        SELECT p.*,
+               pu.nickname AS post_nickname
+        FROM posts p
+                 LEFT JOIN counts c ON p.id = c.posts_id
+                 LEFT JOIN users  pu ON p.users_id = pu.id
+        WHERE p.is_deleted = 0
+        ORDER BY c.like_count DESC
+            LIMIT 8
     </select>
 
-
-
-    <!-- ✅ 특정 도시 게시글 -->
-    <select id="getPostsByCity" parameterType="String" resultMap="PostResultMap">
-        SELECT p.*
+    <!-- ✅ 특정 도시 게시글 (작성자 닉네임 포함) -->
+    <select id="getPostsByCity" parameterType="string" resultMap="PostResultMap">
+        SELECT p.*,
+               pu.nickname AS post_nickname
         FROM posts p
-                 JOIN cities c ON p.cities_id = c.id
+                 JOIN cities c  ON p.cities_id = c.id
+                 LEFT JOIN users pu ON p.users_id = pu.id
         WHERE c.name = #{city}
           AND p.is_deleted = 0
         ORDER BY p.created_at DESC
     </select>
 
-    <!-- ✅ 전체 게시글 목록 -->
+    <!-- ✅ 전체 게시글 목록 (필요시 닉네임 포함) -->
     <select id="getAllPosts" resultMap="PostResultMap">
-        SELECT * FROM posts ORDER BY created_at DESC
+        SELECT p.*,
+               pu.nickname AS post_nickname
+        FROM posts p
+                 LEFT JOIN users pu ON p.users_id = pu.id
+        ORDER BY p.created_at DESC
     </select>
 
-    <!-- ✅ 게시글 단일 조회 (댓글+위치회포함) -->
-    <select id="getPostById" parameterType="int" resultMap="PostWithCommentAndLocationResultMap">
+    <!-- ✅ 게시글 단건 조회 (댓글/위치/작성자 닉 포함) -->
+    <select id="getPostById" parameterType="int"
+            resultMap="PostWithCommentAndLocationResultMap">
         SELECT
             p.id, p.title, p.content, p.users_id, p.slug, p.url,
             p.countries_id, p.cities_id, p.districts_id, p.created_at,
-
             co.view_count, co.like_count, co.comment_count,
-
-            c.id AS comment_id,
-            c.users_id AS comment_users_id,
-            c.content AS comment_content,
+            c.id        AS comment_id,
+            c.users_id  AS comment_users_id,
+            c.content   AS comment_content,
             c.created_at AS comment_created_at,
-            c.posts_id AS comment_posts_id,
-
-            u.nickname AS comment_nickname,
-
-            l.id AS location_id,
-            l.name AS location_name,
-            l.lat AS location_lat,
-            l.lng AS location_lng,
+            c.posts_id  AS comment_posts_id,
+            u.nickname  AS comment_nickname,
+            pu.nickname AS post_nickname,
+            l.id        AS location_id,
+            l.name      AS location_name,
+            l.lat       AS location_lat,
+            l.lng       AS location_lng,
             l.created_at AS location_created_at,
-            l.posts_id AS location_posts_id,
-
-            pu.nickname AS post_nickname
-
+            l.posts_id  AS location_posts_id,
+            d.name      AS district_name
         FROM posts p
-                 LEFT JOIN comments c ON p.id = c.posts_id
-                 LEFT JOIN users u ON c.users_id = u.id
-                 LEFT JOIN locations l ON p.id = l.posts_id
-                 LEFT JOIN counts co ON p.id = co.posts_id
-                 LEFT JOIN users     pu ON p.users_id = pu.id
+                 LEFT JOIN comments  c  ON p.id       = c.posts_id
+                 LEFT JOIN users     u  ON c.users_id = u.id         -- 댓글 작성자
+                 LEFT JOIN locations l  ON p.id       = l.posts_id
+                 LEFT JOIN counts    co ON p.id       = co.posts_id
+                 LEFT JOIN users     pu ON p.users_id = pu.id        -- 게시글 작성자
+                 LEFT JOIN districts  d  ON p.districts_id = d.id
         WHERE p.id = #{id}
-        AND p.is_deleted = 0
+          AND p.is_deleted = 0;
     </select>
 
     <!-- ✅ 게시글 수정 -->
     <update id="update" parameterType="com.trip_gg.post.Post">
         UPDATE posts
-        SET title = #{title}, content = #{content}, url = #{url}, slug = #{slug},
-            countries_id = #{countries_id}, cities_id = #{cities_id},
-            districts_id = #{districts_id}, updated_at = NOW()
+        SET title = #{title},
+            content = #{content},
+            url = #{url},
+            slug = #{slug},
+            countries_id = #{countries_id},
+            cities_id    = #{cities_id},
+            districts_id = #{districts_id},
+            updated_at = NOW()
         WHERE id = #{id}
     </update>
 
@@ -160,62 +170,61 @@
     <select id="checkLocationValidity" resultType="int">
         SELECT COUNT(*)
         FROM districts d
-                 JOIN cities c ON d.cities_id = c.id
+                 JOIN cities    c  ON d.cities_id    = c.id
                  JOIN countries co ON c.countries_id = co.id
         WHERE co.id = #{countries_id}
-          AND c.id = #{cities_id}
-          AND d.id = #{districts_id}
-
+          AND c.id  = #{cities_id}
+          AND d.id  = #{districts_id}
     </select>
 
-    <!-- ✅ 선택적 필터(국가/도시/지역 이름)로 게시글 조회
-         - country / city / district 중 일부만 전달되어도 동작
-         - OGNL test에는 '컬럼'이 아닌 '파라미터 변수명'을 사용해야 함 -->
+    <!-- ✅ 선택적 필터로 게시글 조회 -->
     <select id="findPostsByLocation" resultMap="PostResultMap">
-        SELECT p.*
+        SELECT p.*,
+        pu.nickname AS post_nickname
         FROM posts p
         JOIN countries co ON p.countries_id = co.id
         JOIN cities    ci ON p.cities_id    = ci.id
         JOIN districts di ON p.districts_id = di.id
+        LEFT JOIN users pu ON p.users_id = pu.id
         <where>
-            <!-- 국가명 조건 (파라미터: country) -->
             <if test="country != null and country != ''">
                 AND co.name = #{country}
             </if>
-
-            <!-- 도시명 조건 (파라미터: city) -->
             <if test="city != null and city != ''">
                 AND ci.name = #{city}
             </if>
-
-            <!-- 지역명 조건 (파라미터: district) -->
             <if test="district != null and district != ''">
                 AND di.name = #{district}
             </if>
+            AND p.is_deleted = 0
         </where>
         ORDER BY p.created_at DESC
     </select>
 
-    <!-- 내가 쓴 게시글 목록 조회 -->
+    <!-- ✅ 내가 쓴 게시글 목록 -->
     <select id="findPostsByUserId" parameterType="string" resultMap="PostResultMap">
-        SELECT
-        p.*
+        SELECT p.*,
+               pu.nickname AS post_nickname
         FROM posts p
-        LEFT JOIN users u ON p.users_id = u.id
+                 LEFT JOIN users pu ON p.users_id = pu.id
         WHERE p.users_id = #{users_id}
-            AND p.is_deleted = 0
+          AND p.is_deleted = 0
         ORDER BY p.created_at DESC
     </select>
 
+    <!-- ✅ 내가 좋아요한 게시글 목록 -->
     <select id="findLikedPostsByUserId" parameterType="string" resultMap="PostResultMap">
-        SELECT p.*
+        SELECT p.*,
+               pu.nickname AS post_nickname
         FROM posts p
                  INNER JOIN likes l ON l.posts_id = p.id
+                 LEFT JOIN users pu ON p.users_id = pu.id
         WHERE l.users_id = #{users_id}
           AND p.is_deleted = 0
         ORDER BY p.created_at DESC
     </select>
 
+    <!-- ✅ 내가 쓴 게시글 소프트 삭제 -->
     <update id="deleteMyPost">
         UPDATE posts
         SET is_deleted = 1

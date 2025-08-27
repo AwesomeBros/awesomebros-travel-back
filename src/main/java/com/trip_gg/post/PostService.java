@@ -1,5 +1,7 @@
 package com.trip_gg.post;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trip_gg.comment.Comment;
 import com.trip_gg.comment.CommentMapper;
 import com.trip_gg.comment.CommentRequestDto;
@@ -15,6 +17,7 @@ import com.trip_gg.location.LocationMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -31,6 +34,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PostService {
@@ -189,8 +193,12 @@ public class PostService {
         return postMapper.getAllPosts();
     }
 
+    // 상세 페이지
     public PostResponseDto getPostById(int id, String users_id) {
         Post post = postMapper.getPostById(id);
+
+        // ✅ 1) toString() 기반 출력
+        log.debug("***** 잘 나오는가?? post 객체 전체 : {} *****", post);
 
         List<Location> locationList = locationMapper.getLocationById(id);
         List<LocationDto> locations = locationList.stream()

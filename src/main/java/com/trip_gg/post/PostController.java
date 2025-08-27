@@ -74,6 +74,7 @@ public class PostController {
         return posts;
     }
 
+    // 상세 페이지
     @GetMapping("/{id}")
     public ResponseEntity<PostResponseDto> getPostById(@PathVariable("id") int id,
                                                        HttpServletRequest request) {
